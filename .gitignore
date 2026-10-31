@@ -1,5 +1,11 @@
 .env
 
+# Birthday encryption: generated dependency artifacts and local secrets
+.build-deps/
+.local/
+*.p12
+*.p12.lock
+
 # Maven
 target/
 

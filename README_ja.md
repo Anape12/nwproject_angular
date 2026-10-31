@@ -10,13 +10,18 @@
     * docker compose -f .devcontainer/docker-compose.yml down -v
     * docker compose -f .devcontainer/docker-compose.yml up -d --build
 
+# コンテナ再構築（データ保持）
+
+    * docker compose --env-file .env -f .devcontainer/docker-compose.yml down
+    * docker compose --env-file .env -f .devcontainer/docker-compose.yml up -d --build
+
 # Java 資産の反映
 
     * docker restart my-tomcat
 
 # SQL 反映（Flyway）
 
-DBを削除せずに未適用のSQLを反映する手順は [DBマイグレーションの適用](docs/database-migrations.md) を参照してください。プロジェクト直下から `.env` とComposeファイルを指定して実行します。
+DB を削除せずに未適用の SQL を反映する手順は [DB マイグレーションの適用](docs/database-migrations.md) を参照してください。プロジェクト直下から `.env` と Compose ファイルを指定して実行します。
 
 # Playwrite のテスト実行
 
@@ -62,7 +67,7 @@ JSP の整形には`prettier-plugin-jsp`を使用します。プラグインが�
 
 # Flyway 実行
 
-適用状況の確認、実行、失敗時の注意点は [DBマイグレーションの適用](docs/database-migrations.md) にまとめています。通常のマイグレーションで `docker compose down -v` は実行しません。
+適用状況の確認、実行、失敗時の注意点は [DB マイグレーションの適用](docs/database-migrations.md) にまとめています。通常のマイグレーションで `docker compose down -v` は実行しません。
 
 # 修正後の資産適用
 
@@ -94,37 +99,37 @@ up -d --build --force-recreate
 
 # Qiita Guide（記事の読み上げ）との連携
 
-業務メニューの「Qiita記事を聴く」から、別プロジェクトの`AI_Support`（Qiita Guide）を新しいタブで開きます。NW ProjectとQiita Guideはそれぞれ起動する必要があります。
+業務メニューの「Qiita 記事を聴く」から、別プロジェクトの`AI_Support`（Qiita Guide）を新しいタブで開きます。NW Project と Qiita Guide はそれぞれ起動する必要があります。
 
-ローカルでは`AI_Support`を`nwproject_docker`と同階層に配置し、`AI_Support/.env`にOpenAI APIキーを設定してください。Qiita Guide用のComposeファイルを追加すれば、Node.jsを別ターミナルで起動する必要はありません。PowerShellで`nwproject_docker`直下から実行します。
+ローカルでは`AI_Support`を`nwproject_docker`と同階層に配置し、`AI_Support/.env`に OpenAI API キーを設定してください。Qiita Guide 用の Compose ファイルを追加すれば、Node.js を別ターミナルで起動する必要はありません。PowerShell で`nwproject_docker`直下から実行します。
 
 ```powershell
 docker compose --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.ai.yml -f .devcontainer/docker-compose.qiita.yml up -d --build
 ```
 
-Qiita Guideだけを再ビルドして起動する場合は次のコマンドを使います。
+Qiita Guide だけを再ビルドして起動する場合は次のコマンドを使います。
 
 ```powershell
 docker compose --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.ai.yml -f .devcontainer/docker-compose.qiita.yml up -d --build qiita-guide
 ```
 
-`http://localhost:3000/api/status`で起動状態を確認できます。NW Projectを`localhost`で開いている場合、`QIITA_GUIDE_URL`を省略すると`http://localhost:3000/`を使用します。Qiita Guideのポートはホストのループバックアドレスにだけ公開します。
+`http://localhost:3000/api/status`で起動状態を確認できます。NW Project を`localhost`で開いている場合、`QIITA_GUIDE_URL`を省略すると`http://localhost:3000/`を使用します。Qiita Guide のポートはホストのループバックアドレスにだけ公開します。
 
-別端末やCloudで利用する場合は、Qiita Guideをアクセス可能なHTTPSのURLで公開し、NW Projectの`.env`に接続先を設定します。
+別端末や Cloud で利用する場合は、Qiita Guide をアクセス可能な HTTPS の URL で公開し、NW Project の`.env`に接続先を設定します。
 
 ```text
 QIITA_GUIDE_URL=https://reader.example.com/
 ```
 
-設定変更後はTomcatコンテナを再作成して環境変数を反映します。Cloudでは`localhost`を接続先に指定しないでください。上記Compose設定はローカル用で、Cloudでブラウザーから使うにはHTTPSのリバースプロキシとQiita Guide側のアクセス制御が別途必要です。NW Projectのログイン制御はメニューの起動口にのみ適用されます。
+設定変更後は Tomcat コンテナを再作成して環境変数を反映します。Cloud では`localhost`を接続先に指定しないでください。上記 Compose 設定はローカル用で、Cloud でブラウザーから使うには HTTPS のリバースプロキシと Qiita Guide 側のアクセス制御が別途必要です。NW Project のログイン制御はメニューの起動口にのみ適用されます。
 
 # 技術スタック
 
--   アプリケーション：Java 21、Servlet 4.0／JSP／JSTL、JavaScript、CSS。MavenでWARをビルドし、Apache Tomcat 9で実行。
--   主なライブラリ：MySQL Connector/J、Jackson、Lombok、Spring SecurityのBCryptパスワードエンコーダー。
--   データベース：MySQL 8.0、Flyway 11によるSQLマイグレーション。
--   ローカル実行環境：Docker Compose、NginxによるリバースプロキシとTLS終端。
--   任意のAI連携：別プロジェクトのMy-AiCreateと、そのAPI経由で利用するOllama。
--   任意の記事読み上げ連携：Node.js 22でコンテナ化した別プロジェクトのQiita Guide（AI_Support）。
--   テスト・整形：JUnit 5、PlaywrightによるE2Eテスト、Prettierと`prettier-plugin-jsp`。
--   CI・デプロイ：GitHub Actions。Google Compute Engineは任意のデプロイ先として定義（ローカル開発には不要）。
+-   アプリケーション：Java 21、Servlet 4.0／JSP／JSTL、JavaScript、CSS。Maven で WAR をビルドし、Apache Tomcat 9 で実行。
+-   主なライブラリ：MySQL Connector/J、Jackson、Lombok、Spring Security の BCrypt パスワードエンコーダー。
+-   データベース：MySQL 8.0、Flyway 11 による SQL マイグレーション。
+-   ローカル実行環境：Docker Compose、Nginx によるリバースプロキシと TLS 終端。
+-   任意の AI 連携：別プロジェクトの My-AiCreate と、その API 経由で利用する Ollama。
+-   任意の記事読み上げ連携：Node.js 22 でコンテナ化した別プロジェクトの Qiita Guide（AI_Support）。
+-   テスト・整形：JUnit 5、Playwright による E2E テスト、Prettier と`prettier-plugin-jsp`。
+-   CI・デプロイ：GitHub Actions。Google Compute Engine は任意のデプロイ先として定義（ローカル開発には不要）。

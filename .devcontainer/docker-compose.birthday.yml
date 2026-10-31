@@ -1,0 +1,47 @@
+volumes:
+    birthday-vault-data:
+
+services:
+    tomcat:
+        volumes:
+            - ../.local/birthday:/run/nw-birthday
+        environment:
+            BIRTHDAY_DATA_JDBC_URL: jdbc:mysql://db:3306/${DB_NAME:?DB_NAME must be set}?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+            BIRTHDAY_VAULT_JDBC_URL: jdbc:mysql://birthday-vault:3306/birthday_vault?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+            BIRTHDAY_VAULT_DB_USER: birthday_vault_app
+            BIRTHDAY_VAULT_DB_PASSWORD: ${BIRTHDAY_VAULT_DB_PASSWORD:?Set a separate vault password}
+            BIRTHDAY_KEYSTORE_PATH: /run/nw-birthday/keys/birthday.p12
+            BIRTHDAY_KEYSTORE_PASSWORD_FILE: /run/nw-birthday/secrets/password
+        depends_on:
+            birthday-vault:
+                condition: service_healthy
+    birthday-vault:
+        image: mysql:8.0
+        environment:
+            MYSQL_DATABASE: birthday_vault
+            MYSQL_USER: birthday_vault_app
+            MYSQL_PASSWORD: ${BIRTHDAY_VAULT_DB_PASSWORD:?Set a separate vault password}
+            MYSQL_ROOT_PASSWORD: ${BIRTHDAY_VAULT_ROOT_PASSWORD:?Set a separate vault administration password}
+        volumes:
+            - birthday-vault-data:/var/lib/mysql
+        networks:
+            - app-network
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+            interval: 5s
+            timeout: 3s
+            retries: 40
+    birthday-flyway:
+        image: flyway/flyway:11
+        command: migrate
+        depends_on:
+            birthday-vault:
+                condition: service_healthy
+        volumes:
+            - ./birthday-vault-migration:/flyway/sql:ro
+        environment:
+            FLYWAY_URL: jdbc:mysql://birthday-vault:3306/birthday_vault?allowPublicKeyRetrieval=true&useSSL=false
+            FLYWAY_USER: root
+            FLYWAY_PASSWORD: ${BIRTHDAY_VAULT_ROOT_PASSWORD:?Set a separate vault administration password}
+        networks:
+            - app-network

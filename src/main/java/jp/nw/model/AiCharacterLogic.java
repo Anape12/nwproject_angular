@@ -68,7 +68,7 @@ public class AiCharacterLogic {
             c.setAutoCommit(false);
             try {
                 try (PreparedStatement p = c.prepareStatement(
-                        "INSERT INTO users_info(user_id,password,birthday,permission,account_type,password_expiration,delete_flg,first_name,last_name) VALUES(?,'$2a$10$45HSUdWr4xrIYVymHlDmL.v0sc6xpENpHAszdaiSUG8bVWKuUs5LK','2000-01-01','2','AI','00000000','0',?,'AI住人')")) {
+                        "INSERT INTO users_info(user_id,password,birthday,permission,account_type,password_expiration,delete_flg,first_name,last_name) VALUES(?,'$2a$10$45HSUdWr4xrIYVymHlDmL.v0sc6xpENpHAszdaiSUG8bVWKuUs5LK',NULL,'2','AI','00000000','0',?,'AI住人')")) {
                     p.setString(1, v.getUserId());
                     p.setString(2, v.getCharacterName());
                     p.executeUpdate();

@@ -1,0 +1,14 @@
+.git
+node_modules
+target
+.build-deps/cache
+.build-deps/jpa-security-source
+.local
+.env
+.env.*
+!.env.template
+*.p12
+*.p12.lock
+*.log
+playwright-report
+test-results

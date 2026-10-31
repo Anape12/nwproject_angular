@@ -1,0 +1,57 @@
+services:
+    mysql:
+        image: mysql:8.0
+        environment:
+            MYSQL_ROOT_PASSWORD: birthday-test-root-only
+            MYSQL_ROOT_HOST: "%"
+        ports:
+            - "127.0.0.1:${BIRTHDAY_TEST_DB_PORT:-13326}:3306"
+        volumes:
+            - mysql-test-data:/var/lib/mysql
+            - ./init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+        healthcheck:
+            test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
+            interval: 3s
+            timeout: 3s
+            retries: 60
+    app-flyway:
+        image: flyway/flyway:11
+        command: migrate
+        environment:
+            FLYWAY_URL: jdbc:mysql://mysql:3306/nw_birthday_test?allowPublicKeyRetrieval=true&useSSL=false
+            FLYWAY_USER: root
+            FLYWAY_PASSWORD: birthday-test-root-only
+            FLYWAY_CONNECT_RETRIES: "30"
+        volumes:
+            - ../../.devcontainer/migration:/flyway/sql:ro
+    vault-flyway:
+        image: flyway/flyway:11
+        command: migrate
+        environment:
+            FLYWAY_URL: jdbc:mysql://mysql:3306/nw_birthday_vault?allowPublicKeyRetrieval=true&useSSL=false
+            FLYWAY_USER: root
+            FLYWAY_PASSWORD: birthday-test-root-only
+            FLYWAY_CONNECT_RETRIES: "30"
+        volumes:
+            - ../../.devcontainer/birthday-vault-migration:/flyway/sql:ro
+    tomcat:
+        image: tomcat:9.0-jdk21-temurin
+        ports:
+            - "127.0.0.1:${BIRTHDAY_TEST_HTTP_PORT:-18086}:8080"
+        environment:
+            DB_HOST: mysql
+            DB_PORT: "3306"
+            DB_NAME: nw_birthday_test
+            DB_USER: birthday_test_app
+            DB_PASSWORD: birthday-test-app-only
+            BIRTHDAY_DATA_JDBC_URL: jdbc:mysql://mysql:3306/nw_birthday_test?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+            BIRTHDAY_VAULT_JDBC_URL: jdbc:mysql://mysql:3306/nw_birthday_vault?useUnicode=true&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+            BIRTHDAY_VAULT_DB_USER: birthday_test_vault
+            BIRTHDAY_VAULT_DB_PASSWORD: birthday-test-vault-only
+            BIRTHDAY_KEYSTORE_PATH: /run/birthday/keys/birthday.p12
+            BIRTHDAY_KEYSTORE_PASSWORD_FILE: /run/birthday/secrets/password
+        volumes:
+            - ../../target/app:/usr/local/tomcat/webapps/ROOT:ro
+            - ${BIRTHDAY_TEST_FILES:?Set a unique test files directory}:/run/birthday
+volumes:
+    mysql-test-data:

@@ -151,7 +151,8 @@ public enum ErrorCode {
     APP_136("ERR00010136"),
     APP_137("ERR00010137"),
     APP_138("ERR00010138"),
-    APP_139("ERR00010139");
+    APP_139("ERR00010139"),
+    APP_140("ERR00010140"), APP_141("ERR00010141"), APP_142("ERR00010142");
 
     private final String code;
 

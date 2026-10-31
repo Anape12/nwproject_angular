@@ -11,6 +11,7 @@
         <a href="<%=request.getContextPath()%>/WorkManagement">勤怠</a>
         <a href="<%=request.getContextPath()%>/OpenCalender">予定</a>
         <a href="<%=request.getContextPath()%>/ChatChanelList">チャット</a>
+        <a href="<%=request.getContextPath()%>/UserBirthday">生年月日</a>
     </nav>
     <div class="login-user">
         <% if(loginUser != null){ %> <%=loginUser.getLastName()%> <%=loginUser.getFirstName()%> さん ログイン中 <% } %>

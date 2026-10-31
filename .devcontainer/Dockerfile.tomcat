@@ -13,6 +13,6 @@ COPY server.xml /usr/local/tomcat/conf/server.xml
 # RUN rm -rf /usr/local/tomcat/webapps/ROOT \
 #     && rm -f /usr/local/tomcat/webapps/ROOT.war
 
-COPY target/app /usr/local/tomcat/webapps/ROOT
+COPY --from=build /app/target/app /usr/local/tomcat/webapps/ROOT
 
 CMD ["catalina.sh", "jpda", "run"]

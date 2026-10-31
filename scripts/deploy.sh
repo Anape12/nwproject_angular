@@ -20,6 +20,7 @@ echo "========================================"
 echo " Test & Build"
 echo "========================================"
 
+bash "$PROJECT_DIR/scripts/bootstrap-security.sh"
 time ./mvnw --no-transfer-progress clean package
 
 echo "========================================"
@@ -48,6 +49,11 @@ COMPOSE=(
     --env-file "$PROJECT_DIR/.env"
     -f "$PROJECT_DIR/.devcontainer/docker-compose.yml"
 )
+BIRTHDAY_ENABLED=false
+if [ -f "$PROJECT_DIR/.local/birthday/keys/birthday.p12" ]; then
+    COMPOSE+=(-f "$PROJECT_DIR/.devcontainer/docker-compose.birthday.yml")
+    BIRTHDAY_ENABLED=true
+fi
 if [ -d "$HOME/My-AiCreate" ]; then
     COMPOSE+=(
         -f "$PROJECT_DIR/.devcontainer/docker-compose.ai.yml"
@@ -70,6 +76,16 @@ if [ -z "$("${COMPOSE[@]}" images -q tomcat)" ] || [ "$CURRENT_TOMCAT_HASH" != "
     time "${COMPOSE[@]}" build tomcat
     mkdir -p "$DEPLOY_CACHE_DIR"
     printf '%s' "$CURRENT_TOMCAT_HASH" > "$TOMCAT_HASH_FILE"
+fi
+
+# The key file is locked by the running web application. Migrate offline, then restart.
+if [ "$BIRTHDAY_ENABLED" = true ]; then
+    "${COMPOSE[@]}" up -d --wait birthday-vault
+    "${COMPOSE[@]}" run --rm birthday-flyway
+    "${COMPOSE[@]}" stop tomcat
+    "${COMPOSE[@]}" run --rm --no-deps --entrypoint java tomcat \
+        -cp '/usr/local/tomcat/webapps/ROOT/WEB-INF/classes:/usr/local/tomcat/webapps/ROOT/WEB-INF/lib/*' \
+        jp.nw.security.BirthdayAdmin migrate
 fi
 
 # target/appはホストからマウントされるため、Tomcatだけ再作成すれば反映できる。

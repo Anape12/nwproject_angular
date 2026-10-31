@@ -7,23 +7,47 @@ on:
       - develop
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    # Fork PRs must not receive or execute code with access to private dependencies.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Check private library credentials
+        env:
+          JPA_SECURITY_READ_TOKEN: ${{ secrets.JPA_SECURITY_READ_TOKEN }}
+        run: |
+          if [ -z "$JPA_SECURITY_READ_TOKEN" ]; then
+            echo "::error::Set JPA_SECURITY_READ_TOKEN with Contents read access to Anape12/jpa-security."
+            exit 1
+          fi
+
+      - name: Checkout private encryption library
+        uses: actions/checkout@v4
+        with:
+          repository: Anape12/jpa-security
+          ref: ca1485acaee4f554548d998f1f32f2f9c9872b66
+          path: .build-deps/jpa-security-source
+          token: ${{ secrets.JPA_SECURITY_READ_TOKEN }}
+          persist-credentials: false
 
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
-          cache: maven
 
-      - name: Setup Node 
+      - name: Setup Node
         uses: actions/setup-node@v4
-        with: 
+        with:
           node-version: 22
 
       - name: Create .env
@@ -37,10 +61,17 @@ jobs:
           echo "DB_PASSWORD=$DB_PASSWORD" >> .env
           echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" >> .env
 
+      - name: Prepare encryption library
+        env:
+          JPA_SECURITY_SOURCE: ${{ github.workspace }}/.build-deps/jpa-security-source
+        run: bash scripts/bootstrap-security.sh
+
       - name: Build WAR
         run: mvn --batch-mode --no-transfer-progress clean package
 
       - name: Upload WAR
+        # A public WAR exposes the private library's bytecode.
+        if: github.event.repository.private
         uses: actions/upload-artifact@v4
         with:
           name: app-war
@@ -74,8 +105,8 @@ jobs:
       - name: Run Playwright Tests
         run: npm run test:e2e
 
-      - name: Upload Playwright Report 
-        if: always() 
+      - name: Upload Playwright Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report

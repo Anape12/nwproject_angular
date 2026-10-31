@@ -101,28 +101,28 @@ public final class AuditLogLogic {
                 + "AND r.reason_code=a.reason_code WHERE 1=1");
         List<Object> values = new ArrayList<>();
         if (userId != null && !userId.isBlank()) {
-            sql.append(" AND (actor_user_id=? OR target_id=?)");
+            sql.append(" AND (a.actor_user_id=? OR a.target_id=?)");
             values.add(userId);
             values.add(userId);
         }
         if (category != null && !category.isBlank()) {
-            sql.append(" AND event_category=?");
+            sql.append(" AND a.event_category=?");
             values.add(category);
         }
         if (action != null && !action.isBlank()) {
-            sql.append(" AND event_action LIKE ?");
+            sql.append(" AND a.event_action LIKE ?");
             values.add("%" + action + "%");
         }
         if (success != null) {
-            sql.append(" AND success=?");
+            sql.append(" AND a.success=?");
             values.add(success);
         }
         if (from != null) {
-            sql.append(" AND created_at>=?");
+            sql.append(" AND a.created_at>=?");
             values.add(from.atStartOfDay());
         }
         if (to != null) {
-            sql.append(" AND created_at<?");
+            sql.append(" AND a.created_at<?");
             values.add(to.plusDays(1).atStartOfDay());
         }
         sql.append(" ORDER BY a.created_at DESC,a.audit_id DESC LIMIT ?");

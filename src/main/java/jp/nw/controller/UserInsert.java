@@ -86,6 +86,8 @@ public class UserInsert extends HttpServlet {
                     "権限=" + user.getPermission());
             session.setAttribute("userInsertSuccess", user.getUserId() + " を登録しました。");
             response.sendRedirect(request.getContextPath() + "/UserInsert");
+        } catch (CodedException.Failure e) {
+            response.sendError(503, jp.nw.model.ErrorMessageLogic.forDisplay(e));
         } catch (IllegalArgumentException | DateTimeParseException e) {
             AuditLogLogic.record(request, "USER", "USER_CREATE_FAILED", "USER",
                     trim(request.getParameter("userId")), false, e.getMessage());

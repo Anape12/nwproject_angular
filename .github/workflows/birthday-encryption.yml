@@ -1,0 +1,39 @@
+name: Birthday encryption integration
+on: [push, pull_request]
+permissions:
+    contents: read
+jobs:
+    encrypted-birthday:
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  persist-credentials: false
+            - name: Check private library credentials
+              env:
+                  JPA_SECURITY_READ_TOKEN: ${{ secrets.JPA_SECURITY_READ_TOKEN }}
+              run: |
+                  if [ -z "$JPA_SECURITY_READ_TOKEN" ]; then
+                    echo "::error::Set JPA_SECURITY_READ_TOKEN with Contents read access to Anape12/jpa-security."
+                    exit 1
+                  fi
+            - uses: actions/checkout@v4
+              with:
+                  repository: Anape12/jpa-security
+                  ref: ca1485acaee4f554548d998f1f32f2f9c9872b66
+                  path: .build-deps/jpa-security-source
+                  token: ${{ secrets.JPA_SECURITY_READ_TOKEN }}
+                  persist-credentials: false
+            - uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: "21"
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+                  cache: npm
+            - run: npm ci
+            - run: npx playwright install --with-deps chromium
+            - shell: pwsh
+              run: ./scripts/test-birthday.ps1 -Maven mvn -Source .build-deps/jpa-security-source

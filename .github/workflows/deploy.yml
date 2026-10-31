@@ -18,7 +18,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-          cache: maven
 
       # Tailscale接続
       - name: Connect Tailscale
@@ -68,6 +67,9 @@ jobs:
             git pull
 
             chmod +x mvnw
+
+            # The server must have an authenticated checkout of the private library.
+            bash scripts/bootstrap-security.sh
 
             echo "===== Unit Test ====="
             ./mvnw test

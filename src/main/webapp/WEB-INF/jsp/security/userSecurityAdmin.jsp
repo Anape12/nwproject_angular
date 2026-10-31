@@ -53,6 +53,10 @@
                         </dl>
 
                         <c:if test="${u.accountType != 'AI' and (u.permission != '0' or canManageSystemUsers)}">
+                            <c:url var="birthdayUrl" value="/UserBirthday"
+                                ><c:param name="userId" value="${u.userId}"
+                            /></c:url>
+                            <a href="${fn:escapeXml(birthdayUrl)}">生年月日を確認・変更</a>
                             <form method="post">
                                 <input type="hidden" name="csrfToken" value="${csrfToken}" />
                                 <input type="hidden" name="targetUserId" value="${u.userId}" />
