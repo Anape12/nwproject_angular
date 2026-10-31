@@ -86,6 +86,7 @@ jobs:
         run: docker compose --env-file .env -f .devcontainer/docker-compose.yml build
 
       - name: Start Containers
+        id: start_containers
         run: docker compose --env-file .env -f .devcontainer/docker-compose.yml up -d
 
       - name: Wait for Tomcat
@@ -119,9 +120,10 @@ jobs:
           path: test-results/
 
       - name: Show Container Logs
-        if: failure()
+        if: failure() && steps.start_containers.outcome != '' && steps.start_containers.outcome != 'skipped'
         run: docker compose --env-file .env -f .devcontainer/docker-compose.yml logs
 
       - name: Shutdown Containers
-        if: always()
+        # A failed or cancelled startup can still leave partially started containers.
+        if: always() && steps.start_containers.outcome != '' && steps.start_containers.outcome != 'skipped'
         run: docker compose --env-file .env -f .devcontainer/docker-compose.yml down
