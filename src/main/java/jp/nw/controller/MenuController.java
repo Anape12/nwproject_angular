@@ -30,6 +30,7 @@ public class MenuController extends HttpServlet {
             return;
         }
         UserEntity user = (UserEntity) request.getSession().getAttribute("loginUser");
+        request.setAttribute("searchUserInfo", PermissionCheckUtil.can(user, PermissionAction.SEARCH_USER_INFO));
         request.setAttribute("canManageUsers", PermissionCheckUtil.can(user, PermissionAction.USER_MANAGE));
         request.setAttribute("canAudit", PermissionCheckUtil.can(user, PermissionAction.AUDIT_VIEW));
         request.setAttribute("canManageAi", PermissionCheckUtil.can(user, PermissionAction.AI_CHARACTER_MANAGE));

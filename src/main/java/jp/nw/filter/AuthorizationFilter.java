@@ -23,6 +23,7 @@ public class AuthorizationFilter implements Filter {
             "/AiCharacterAdmin", PermissionAction.AI_CHARACTER_MANAGE,
             "/ReverseEngineering", PermissionAction.DESIGN_REVERSE_VIEW,
             "/SelectApp", PermissionAction.EXTERNAL_TOOLS_VIEW,
+            "/UserSearch", PermissionAction.SEARCH_USER_INFO,
             "/UserInsert", PermissionAction.USER_MANAGE,
             "/UserSecurityAdmin", PermissionAction.USER_MANAGE);
 

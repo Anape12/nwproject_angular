@@ -22,6 +22,9 @@ class AuthorizationFilterTest {
         assertRequest("/AuditLog", "2", 0, 403);
         assertRequest("/ReverseEngineering", "0", 1, 0);
         assertRequest("/ReverseEngineering", "1", 0, 403);
+        assertRequest("/UserSearch", "0", 1, 0);
+        assertRequest("/UserSearch", "1", 0, 403);
+        assertRequest("/UserSearch", "2", 0, 403);
         assertRequest("/SelectApp", "2", 0, 403);
         assertRequest("/UserSecurityAdmin", null, 0, 403);
         assertRequest("/WorkManagement", "2", 1, 0);

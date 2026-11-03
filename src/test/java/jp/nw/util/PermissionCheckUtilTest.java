@@ -22,10 +22,11 @@ class PermissionCheckUtilTest {
     }
 
     @Test
-    void administratorInheritsManagementButNotSystemOnlyDesign() {
+    void administratorCannotUseSystemOnlyActions() {
         UserEntity admin = user("1", "HUMAN");
         for (PermissionAction action : PermissionAction.values())
-            if (action == PermissionAction.DESIGN_REVERSE_VIEW)
+            if (action == PermissionAction.DESIGN_REVERSE_VIEW
+                    || action == PermissionAction.SEARCH_USER_INFO)
                 assertFalse(PermissionCheckUtil.can(admin, action));
             else
                 assertTrue(PermissionCheckUtil.can(admin, action), action.name());
