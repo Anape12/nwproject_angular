@@ -58,12 +58,4 @@ export class BusinessMenuComponent {
 export class ResultComponent {
     readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
     readonly contextPath = this.data["contextPath"] ?? "";
-
-    closeWindow(): void {
-        window.close();
-    }
-
-    goBack(): void {
-        history.back();
-    }
 }

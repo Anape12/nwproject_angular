@@ -99,7 +99,7 @@
         return originalSend.apply(this, arguments);
     };
 
-    document.addEventListener("DOMContentLoaded", function () {
+    function startDecorating() {
         decorate(document);
         new MutationObserver(function (mutations) {
             mutations.forEach(function (mutation) {
@@ -108,5 +108,11 @@
                 });
             });
         }).observe(document.documentElement, { childList: true, subtree: true });
-    });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", startDecorating, { once: true });
+    } else {
+        startDecorating();
+    }
 })();

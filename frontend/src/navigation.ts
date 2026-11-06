@@ -1,4 +1,30 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { loadPageData } from "./page-data";
+
+interface MenuData {
+    contextPath: string;
+    firstName: string | null;
+    lastName: string | null;
+    loginContext: string;
+}
+
+export async function prepareStaticMenu(host: HTMLElement): Promise<boolean> {
+    const data = await loadPageData<MenuData>("", location.pathname, new URLSearchParams(location.search));
+    if (!data) return false;
+    host.dataset["contextPath"] = data.contextPath;
+    host.dataset["firstName"] = data.firstName ?? "";
+    host.dataset["lastName"] = data.lastName ?? "";
+
+    Object.assign(window, { NW_SERVER_LOGIN_CONTEXT: data.loginContext, NW_CONTEXT_PATH: data.contextPath });
+    await new Promise<void>((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = data.contextPath + "/js/login-context.js?v=20261107-1";
+        script.onload = () => resolve();
+        script.onerror = () => reject(new Error("Login context script failed to load"));
+        document.head.appendChild(script);
+    });
+    return true;
+}
 
 function readNavigationData() {
     const { contextPath, firstName, lastName, loggedIn } =
