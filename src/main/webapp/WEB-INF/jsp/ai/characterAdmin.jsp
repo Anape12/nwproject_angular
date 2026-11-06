@@ -11,128 +11,15 @@
     </head>
     <body>
         <jsp:include page="/WEB-INF/jsp/common/header.jsp" />
-        <main class="ai-admin">
-            <header>
-                <div>
-                    <span>AI CHARACTER</span>
-                    <h1>AI住人管理</h1>
-                    <p>AIの表示名、使用するプロンプト、応答方法を設定します。</p>
-                </div>
-            </header>
-            <c:if test="${not empty flash}"
-                ><p class="ai-flash ${flashType}"><c:out value="${flash}" /></p
-            ></c:if>
-            <div class="ai-layout">
-                <section class="ai-list">
-                    <h2>登録済みAI</h2>
-                    <c:forEach var="item" items="${characters}"
-                        ><a
-                            href="${pageContext.request.contextPath}/AiCharacterAdmin?edit=${item.characterId}"
-                            class="ai-card"
-                            ><span class="ai-avatar">AI</span>
-                            <div>
-                                <strong><c:out value="${item.characterName}" /></strong
-                                ><small
-                                    >@<c:out value="${item.userId}" /> ·
-                                    ${item.replyMode=='ALWAYS'?'常時応答':'メンション応答'}</small
-                                >
-                            </div>
-                            <em class="${item.activeFlg=='1'?'active':'inactive'}"
-                                >${item.activeFlg=='1'?'稼働中':'停止中'}</em
-                            ></a
-                        ></c:forEach
-                    >
-                </section>
-                <section class="ai-form">
-                    <h2>${empty selected?'AI住人を追加':'AI住人を編集'}</h2>
-                    <form method="post" action="${pageContext.request.contextPath}/AiCharacterAdmin">
-                        <input type="hidden" name="csrfToken" value="${sessionScope.aiAdminCsrf}" /><c:if
-                            test="${not empty selected}"
-                            ><input type="hidden" name="characterId" value="${selected.characterId}" /></c:if
-                        ><label
-                            >ユーザーID<input
-                                name="userId"
-                                value="${selected.userId}"
-                                pattern="[A-Za-z0-9_-]{3,20}"
-                                data-readonly="${not empty selected}"
-                                data-required="${empty selected}"
-                                placeholder="ai_mia" /></label
-                        ><label
-                            >表示名<input
-                                name="characterName"
-                                maxlength="50"
-                                required
-                                value="${selected.characterName}"
-                                placeholder="ミア" /></label
-                        ><label
-                            >プロンプトキー<input
-                                name="promptKey"
-                                required
-                                pattern="[a-z0-9][a-z0-9_-]{0,63}"
-                                value="${empty selected ? 'mia' : selected.promptKey}"
-                                placeholder="mia"
-                            /><small>My-AiCreate/prompts/配下のディレクトリ名を指定します。</small></label
-                        ><label>モデル名（空欄は既定値）<input name="modelName" value="${selected.modelName}" /></label
-                        ><label
-                            >応答方法<select name="replyMode">
-                                <option value="MENTION" data-selected="${selected.replyMode=='MENTION'}">
-                                    メンションされた時だけ
-                                </option>
-                                <option value="ALWAYS" data-selected="${selected.replyMode=='ALWAYS'}">
-                                    参加チャットでは常時
-                                </option>
-                            </select></label
-                        ><label class="check"
-                            ><input
-                                type="checkbox"
-                                name="activeFlg"
-                                data-checked="${empty selected||selected.activeFlg=='1'}"
-                            />稼働する</label
-                        >
-                        <div class="actions">
-                            <c:if test="${not empty selected}"
-                                ><a href="${pageContext.request.contextPath}/AiCharacterAdmin">新規登録へ</a></c:if
-                            ><button type="submit">保存する</button>
-                        </div>
-                    </form>
-                </section>
-            </div>
-            <section class="ai-jobs">
-                <h2>直近のAI応答状況</h2>
-                <div class="job-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>AI</th>
-                                <th>場所</th>
-                                <th>状態</th>
-                                <th>試行</th>
-                                <th>詳細</th>
-                                <th>受付日時</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <c:forEach var="job" items="${recentJobs}"
-                                ><tr>
-                                    <td>${job.jobId}</td>
-                                    <td><c:out value="${job.characterName}" /></td>
-                                    <td>${job.sourceType}</td>
-                                    <td><span class="job-status ${job.status}">${job.status}</span></td>
-                                    <td>${job.retryCount}</td>
-                                    <td class="job-error"><c:out value="${job.errorMessage}" /></td>
-                                    <td>${job.createdAt}</td>
-                                </tr></c:forEach
-                            ><c:if test="${empty recentJobs}"
-                                ><tr>
-                                    <td colspan="7">AIへの応答要求はまだありません。</td>
-                                </tr></c:if
-                            >
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
-        <script src="${pageContext.request.contextPath}/js/jsp-boolean-attributes.js"></script>
+        <nw-ai-character-admin
+            data-context-path="${pageContext.request.contextPath}"
+            data-csrf-token="<c:out value='${sessionScope.aiAdminCsrf}' />"
+            data-flash="<c:out value='${flash}' />"
+            data-flash-type="<c:out value='${flashType}' />"
+            data-characters="<c:out value='${charactersJson}' />"
+            data-selected="<c:out value='${selectedJson}' />"
+            data-jobs="<c:out value='${recentJobsJson}' />"
+        ></nw-ai-character-admin>
+        <noscript>AI住人管理を利用するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

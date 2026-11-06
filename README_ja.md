@@ -1,27 +1,67 @@
-# 初期セットアップ
+# NW Project Angular
 
-1. 資産生成
-    - .\mvnw clean install
-1. コンテナ構築
-    - docker compose up -d --build
+## Windows で画面を起動する
 
-# コンテナ削除 → 再生成
+JDK 21 と Docker Desktop（Linux コンテナ）を用意し、このリポジトリの直下で PowerShell を開きます。初回ビルドには、アクセス権のある `jpa-security` のチェックアウトも必要です。[依存ライブラリの準備](docs/birthday-encryption.md)
 
-    * docker compose -f .devcontainer/docker-compose.yml down -v
-    * docker compose -f .devcontainer/docker-compose.yml up -d --build
+以下では `-p nwproject-angular` で DB ボリュームを分け、`.env` でコンテナ名と公開ポートを分けます。元の `nwproject_docker` は起動したままで構いません。
 
-# コンテナ再構築（データ保持）
+1. 初回だけ `.env` を作成し、`DB_PASSWORD` と `MYSQL_ROOT_PASSWORD` を設定します。既存の `.env` がある場合はそのファイルを使います。アプリ用の `DB_USER` は `nwproject_app` を使います。MySQL の初期化では `DB_USER=root` を指定すると起動に失敗します。
 
-    * docker compose --env-file .env -f .devcontainer/docker-compose.yml down
-    * docker compose --env-file .env -f .devcontainer/docker-compose.yml up -d --build
+    ```powershell
+    Copy-Item .env.template .env
+    notepad .env
+    ```
 
-# Java 資産の反映
+    既存の `.env` を使う場合は、次の設定を追加します。
 
-    * docker restart my-tomcat
+    ```dotenv
+    NW_DB_CONTAINER=nwproject-angular-db
+    NW_TOMCAT_CONTAINER=nwproject-angular-tomcat
+    NW_DB_HOST_PORT=3308
+    NW_HTTP_PORT=8081
+    NW_DEBUG_PORT=5006
+    ```
+
+2. 依存ライブラリを準備し、アプリをビルドします。Maven が Node.js の取得、Angular のビルド、WAR への同梱を行います。
+
+    ```powershell
+    .\scripts\bootstrap-security.ps1
+    .\mvnw.cmd clean package
+    ```
+
+3. Docker Desktop を起動した状態で、DB の準備と Tomcat の起動を順番に実行します。Flyway が成功したことを確認してから Tomcat を起動します。
+
+    ```powershell
+    docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml up -d db
+    docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml run --rm flyway
+    docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml up -d --build tomcat
+    ```
+
+4. ブラウザーでログイン画面を開きます。[http://localhost:8081/Login](http://localhost:8081/Login)
+
+通常の画面確認には、Tomcat と MySQL を使用します。AI 住人、Qiita Guide、生年月日の暗号化機能には、それぞれの追加設定が必要です。
+
+## 変更を反映する
+
+Tomcat は `target/app` を参照します。Angular または Java を変更したら、ビルドして Tomcat を再起動します。
+
+```powershell
+.\mvnw.cmd package
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml restart tomcat
+```
+
+画面が開かない場合は、次のコマンドで起動ログを確認します。
+
+```powershell
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml logs --tail 100 tomcat
+```
+
+Angular のビルド方法と旧画面の扱いは、[Angular 移行計画](docs/angular-migration.md)を参照してください。
 
 # SQL 反映（Flyway）
 
-DB を削除せずに未適用の SQL を反映する手順は [DB マイグレーションの適用](docs/database-migrations.md) を参照してください。プロジェクト直下から `.env` と Compose ファイルを指定して実行します。
+DB を削除せずに未適用の SQL を反映する手順は [DB マイグレーションの適用](docs/database-migrations.md) を参照してください。この README の手順で起動した環境では、同じ DB を使うために各 Compose コマンドにも `-p nwproject-angular` を指定します。
 
 # Playwrite のテスト実行
 
@@ -69,48 +109,32 @@ JSP の整形には`prettier-plugin-jsp`を使用します。プラグインが�
 
 適用状況の確認、実行、失敗時の注意点は [DB マイグレーションの適用](docs/database-migrations.md) にまとめています。通常のマイグレーションで `docker compose down -v` は実行しません。
 
-# 修正後の資産適用
-
-1. cd nwproject_docker
-1. mvnw package
-1. ブラウザ super reload
-
 # VSCode キャッシュ先
 
     * %APPDATA%\Code\User\workspaceStorage
 
 # My-AI との接続
 
-cd C:\Users\tmng1\workspace\nwproject_docker
+先に通常の起動手順を実行し、[AI 住人のローカル設定](docs/ai-character-local.md)を準備します。このリポジトリの直下で AI 用の Compose 定義を追加します。
 
-docker compose `  --env-file .env`
--f .devcontainer/docker-compose.yml `  -f .devcontainer/docker-compose.ai.yml`
-up -d --build --force-recreate
-
--   war 再作成
-    docker compose `  --env-file .env`
-    -f .devcontainer/docker-compose.yml `  -f .devcontainer/docker-compose.ai.yml`
-    run --rm -w /workspaces app ./mvnw clean package
-
--   tomcat 再構築
-    docker compose `  --env-file .env`
-    -f .devcontainer/docker-compose.yml `  -f .devcontainer/docker-compose.ai.yml`
-    up -d --build --force-recreate
+```powershell
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.ai.yml up -d --build tomcat
+```
 
 # Qiita Guide（記事の読み上げ）との連携
 
 業務メニューの「Qiita 記事を聴く」から、別プロジェクトの`AI_Support`（Qiita Guide）を新しいタブで開きます。NW Project と Qiita Guide はそれぞれ起動する必要があります。
 
-ローカルでは`AI_Support`を`nwproject_docker`と同階層に配置し、`AI_Support/.env`に OpenAI API キーを設定してください。Qiita Guide 用の Compose ファイルを追加すれば、Node.js を別ターミナルで起動する必要はありません。PowerShell で`nwproject_docker`直下から実行します。
+ローカルでは `AI_Support` をこのリポジトリと同階層に配置し、`AI_Support/.env` に OpenAI API キーを設定します。PowerShell でこのリポジトリの直下から実行します。
 
 ```powershell
-docker compose --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.ai.yml -f .devcontainer/docker-compose.qiita.yml up -d --build
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.ai.yml -f .devcontainer/docker-compose.qiita.yml up -d --build tomcat qiita-guide
 ```
 
 Qiita Guide だけを再ビルドして起動する場合は次のコマンドを使います。
 
 ```powershell
-docker compose --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.ai.yml -f .devcontainer/docker-compose.qiita.yml up -d --build qiita-guide
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.ai.yml -f .devcontainer/docker-compose.qiita.yml up -d --build qiita-guide
 ```
 
 `http://localhost:3000/api/status`で起動状態を確認できます。NW Project を`localhost`で開いている場合、`QIITA_GUIDE_URL`を省略すると`http://localhost:3000/`を使用します。Qiita Guide のポートはホストのループバックアドレスにだけ公開します。
@@ -125,7 +149,7 @@ QIITA_GUIDE_URL=https://reader.example.com/
 
 # 技術スタック
 
--   アプリケーション：Java 21、Servlet 4.0／JSP／JSTL、JavaScript、CSS。Maven で WAR をビルドし、Apache Tomcat 9 で実行。
+-   アプリケーション：Angular 21、TypeScript、Java 21、Servlet 4.0、JSP／JSTL。Maven で WAR をビルドし、Apache Tomcat 9 で実行。
 -   主なライブラリ：MySQL Connector/J、Jackson、Lombok、Spring Security の BCrypt パスワードエンコーダー。
 -   データベース：MySQL 8.0、Flyway 11 による SQL マイグレーション。
 -   ローカル実行環境：Docker Compose、Nginx によるリバースプロキシと TLS 終端。

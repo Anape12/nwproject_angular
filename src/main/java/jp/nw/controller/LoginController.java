@@ -49,8 +49,7 @@ public class LoginController extends HttpServlet {
 		} else if ("1".equals(request.getParameter("windowInvalid"))) {
 			request.setAttribute("errorMessage", jp.nw.model.ErrorMessageLogic.get(jp.nw.model.ErrorCode.APP_129));
 		}
-		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/login/login.jsp");
-		dispatcher.forward(request, response);
+		renderLogin(request, response);
 	}
 
 	/**
@@ -68,9 +67,7 @@ public class LoginController extends HttpServlet {
 
 		if (!result.authenticated()) {
 			this.baseModel.writeInfo("ログイン失敗");
-			request.setAttribute("errorMessage", result.message());
-			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/login/loginMiss.jsp");
-			dispatcher.forward(request, response);
+			renderLoginFailure(request, response, result.message());
 			return;
 		}
 
@@ -95,9 +92,7 @@ public class LoginController extends HttpServlet {
 		if (!isTokenUpdated) {
 			this.baseModel.writeInfo("トークン更新失敗");
 			// ログイン失敗
-			request.setAttribute("errorMessage", jp.nw.model.ErrorMessageLogic.get(jp.nw.model.ErrorCode.APP_134));
-			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/login/loginMiss.jsp");
-			dispatcher.forward(request, response);
+			renderLoginFailure(request, response, jp.nw.model.ErrorMessageLogic.get(jp.nw.model.ErrorCode.APP_134));
 			return;
 		}
 
@@ -115,6 +110,19 @@ public class LoginController extends HttpServlet {
 		response.sendRedirect(
 				request.getContextPath()
 						+ (result.forcePasswordChange() ? "/ChangePassword?loginFresh=1" : "/MenuSelect?loginFresh=1"));
+	}
+
+	private void renderLoginFailure(HttpServletRequest request, HttpServletResponse response, String message)
+			throws ServletException, IOException {
+		request.setAttribute("loginFailed", true);
+		request.setAttribute("errorMessage", message);
+		renderLogin(request, response);
+	}
+
+	private void renderLogin(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/login/login.jsp");
+		dispatcher.forward(request, response);
 	}
 
 	private int sessionTimeoutSeconds() {

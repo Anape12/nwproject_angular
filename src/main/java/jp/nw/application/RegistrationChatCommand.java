@@ -44,8 +44,8 @@ public class RegistrationChatCommand extends ApplicationCommand {
 
 			HttpSession session = this.request.getSession();
 			this.userEntity = (UserEntity) session.getAttribute(KEY_SESSIONUSER);
-            this.roomId = (String) session.getAttribute("roomId");
-            this.comment = (String) session.getAttribute("comment");
+            this.roomId = this.request.getParameter("roomId");
+            this.comment = this.request.getParameter("commentText");
 
 			return true;
 		} catch (Exception e) {

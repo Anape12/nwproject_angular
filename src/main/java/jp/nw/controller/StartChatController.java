@@ -1,15 +1,15 @@
 package jp.nw.controller;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -33,10 +33,10 @@ public class StartChatController extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		RequestDispatcher dispatcher = request.getRequestDispatcher(
-				"/WEB-INF/jsp/chat/ChatWindow.jsp");
-
-		dispatcher.forward(request, response);
+		String roomId = request.getSession().getAttribute(ChatChanelRoomController.LAST_ROOM)
+				instanceof ChatChanelRoomController.LastRoom last ? last.id() : null;
+		response.sendRedirect(request.getContextPath() + (roomId == null ? "/ChatChanelList"
+				: "/ChatChanelRoom?roomId=" + URLEncoder.encode(roomId, StandardCharsets.UTF_8)));
 
 	}
 
@@ -44,13 +44,6 @@ public class StartChatController extends HttpServlet {
 			throws ServletException, IOException {
 
 		request.setCharacterEncoding("UTF-8");
-		String comment = request.getParameter("commentText");
-		String roomId = request.getParameter("roomId");
-
-		HttpSession session = request.getSession();
-		session.setAttribute("roomId", roomId);
-		session.setAttribute("comment", comment);
-
 		RegistrationChatCommand command = new RegistrationChatCommand();
 		command.setCommandData(request, response);
 		CommandData output = command.execute();

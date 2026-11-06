@@ -1,0 +1,81 @@
+<main class="security-page">
+    <div class="page-head">
+        <div><p>ADMINISTRATION</p><h1>アカウント・セキュリティ管理</h1></div>
+        <a [href]="contextPath + '/AuditLog'">監査ログを検索</a>
+    </div>
+    @if (flash) {
+        <div [class]="'alert ' + flashType" role="status">{{ flash }}</div>
+    }
+    <div class="user-security-grid">
+        @for (user of users; track user.userId) {
+            <section class="security-card user-card">
+                <div class="user-title">
+                    <div>
+                        <strong>{{ user.lastName }} {{ user.firstName }}</strong>
+                        <small>{{ user.userId }}・{{ user.accountType }}</small>
+                    </div>
+                    <span class="status" [class.disabled]="user.disabled" [class.active]="!user.disabled">
+                        {{ user.disabled ? "無効" : "有効" }}
+                    </span>
+                </div>
+                <dl>
+                    <dt>最終ログイン</dt><dd>{{ user.lastLoginAt || "-" }}</dd>
+                    <dt>ロック</dt><dd>{{ user.lockedUntil || "-" }}</dd>
+                    <dt>失敗回数</dt><dd>{{ user.failedLoginCount }}</dd>
+                    <dt>初回変更</dt><dd>{{ user.forcePasswordChange ? "必要" : "不要" }}</dd>
+                </dl>
+                @if (user.manageable) {
+                    <a [href]="birthdayUrl(user.userId)">生年月日を確認・変更</a>
+                    <form method="post" [action]="action">
+                        <input type="hidden" name="csrfToken" [value]="csrf" />
+                        <input type="hidden" name="targetUserId" [value]="user.userId" />
+                        <input type="hidden" name="action" value="updateProfile" />
+                        <div class="form-grid">
+                            <label>姓 <input name="lastName" [value]="user.lastName" required /></label>
+                            <label>名 <input name="firstName" [value]="user.firstName" required /></label>
+                            <label>
+                                権限
+                                <select name="permission">
+                                    @if (systemAdmin) {
+                                        <option value="0" [selected]="user.permission === '0'">システム権限者</option>
+                                    }
+                                    <option value="1" [selected]="user.permission === '1'">管理者</option>
+                                    <option value="2" [selected]="user.permission !== '0' && user.permission !== '1'">
+                                        一般ユーザー
+                                    </option>
+                                </select>
+                            </label>
+                        </div>
+                        <button type="submit">基本情報・権限を更新</button>
+                    </form>
+                    <div class="action-row">
+                        <form method="post" [action]="action">
+                            <input type="hidden" name="csrfToken" [value]="csrf" />
+                            <input type="hidden" name="targetUserId" [value]="user.userId" />
+                            <input type="hidden" name="action" [value]="user.disabled ? 'enable' : 'disable'" />
+                            <button [class]="user.disabled ? 'primary' : 'danger'" type="submit">
+                                {{ user.disabled ? "有効化" : "無効化" }}
+                            </button>
+                        </form>
+                        <form method="post" [action]="action">
+                            <input type="hidden" name="csrfToken" [value]="csrf" />
+                            <input type="hidden" name="targetUserId" [value]="user.userId" />
+                            <input type="hidden" name="action" value="unlock" />
+                            <button type="submit">ロック解除</button>
+                        </form>
+                    </div>
+                    <form method="post" class="reset-form" [action]="action">
+                        <input type="hidden" name="csrfToken" [value]="csrf" />
+                        <input type="hidden" name="targetUserId" [value]="user.userId" />
+                        <input type="hidden" name="action" value="resetPassword" />
+                        <label>
+                            仮パスワード
+                            <input type="password" name="temporaryPassword" minlength="8" required autocomplete="new-password" />
+                        </label>
+                        <button type="submit">パスワード再設定</button>
+                    </form>
+                }
+            </section>
+        }
+    </div>
+</main>

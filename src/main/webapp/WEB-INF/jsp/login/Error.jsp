@@ -1,16 +1,19 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
 <html lang="ja">
     <head>
         <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>エラー</title>
     </head>
     <body style="background:#deafd3;">
-        <h2>エラーが発生しました</h2>
-
-        <c:if test="${not empty errorMsg}"
-            ><p style="color:red;"><c:out value="${errorMsg}" /></p
-        ></c:if>
+        <nw-result
+            data-kind="error"
+            data-context-path="${pageContext.request.contextPath}"
+            data-error-message="<c:out value='${errorMsg}' />"
+        ></nw-result>
+        <script type="module" src="${pageContext.request.contextPath}/js/angular/main.js"></script>
+        <noscript>結果を表示するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

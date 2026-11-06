@@ -1,6 +1,8 @@
 package jp.nw.controller;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.servlet.ServletException;
@@ -15,6 +17,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.domain.user.PermissionAction;
 import jp.nw.model.AiCharacterLogic;
 import jp.nw.util.PermissionCheckUtil;
+import jp.nw.util.PageJson;
 
 @WebServlet("/AiCharacterAdmin")
 public class AiCharacterAdminController extends HttpServlet {
@@ -30,12 +33,15 @@ public class AiCharacterAdminController extends HttpServlet {
         if (session.getAttribute("aiAdminCsrf") == null)
             session.setAttribute("aiAdminCsrf", UUID.randomUUID().toString());
         AiCharacterLogic l = new AiCharacterLogic();
-        q.setAttribute("characters", l.findAll());
-        q.setAttribute("recentJobs", l.findRecentJobs());
+        PageJson.set(q, "charactersJson", l.findAll().stream().map(CharacterRow::from).toList());
+        PageJson.set(q, "recentJobsJson", l.findRecentJobs().stream().map(JobRow::from).toList());
         String edit = q.getParameter("edit");
         if (edit != null)
             try {
-                q.setAttribute("selected", l.find(Long.parseLong(edit)));
+                AiCharacterEntity selected = l.find(Long.parseLong(edit));
+                if (selected != null) {
+                    PageJson.set(q, "selectedJson", CharacterRow.from(selected));
+                }
             } catch (NumberFormatException ignored) {
             }
         q.setAttribute("flash", session.getAttribute("aiAdminFlash"));
@@ -53,7 +59,7 @@ public class AiCharacterAdminController extends HttpServlet {
             s.sendError(403);
             return;
         }
-        if (!java.util.Objects.equals(session.getAttribute("aiAdminCsrf"), q.getParameter("csrfToken"))) {
+        if (!Objects.equals(session.getAttribute("aiAdminCsrf"), q.getParameter("csrfToken"))) {
             s.sendError(403);
             return;
         }
@@ -90,5 +96,24 @@ public class AiCharacterAdminController extends HttpServlet {
     private void flash(HttpSession s, String m, String t) {
         s.setAttribute("aiAdminFlash", m);
         s.setAttribute("aiAdminFlashType", t);
+    }
+
+    private record CharacterRow(String id, String userId, String name, String promptKey, String modelName,
+            String replyMode, boolean active) {
+        static CharacterRow from(AiCharacterEntity character) {
+            return new CharacterRow(Long.toString(character.getCharacterId()), character.getUserId(),
+                    character.getCharacterName(), character.getPromptKey(), character.getModelName(),
+                    character.getReplyMode(), "1".equals(character.getActiveFlg()));
+        }
+    }
+
+    private record JobRow(String id, String characterName, String sourceType, String status, int retryCount,
+            String errorMessage, String createdAt) {
+        static JobRow from(Map<String, Object> job) {
+            return new JobRow(job.get("jobId").toString(), (String) job.get("characterName"),
+                    (String) job.get("sourceType"), (String) job.get("status"),
+                    ((Number) job.get("retryCount")).intValue(), (String) job.get("errorMessage"),
+                    Objects.toString(job.get("createdAt"), ""));
+        }
     }
 }

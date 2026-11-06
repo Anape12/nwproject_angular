@@ -1,0 +1,40 @@
+@if (failed) {
+    <main class="auth-result-main">
+        <div class="auth-result-layout">
+            <header class="login-title">
+                <h1>NW Project</h1>
+                <p>Management System</p>
+            </header>
+            <section class="login-card auth-result-card" role="alert" aria-labelledby="auth-result-heading">
+                <span class="auth-result-icon" aria-hidden="true">!</span>
+                <h2 id="auth-result-heading">ログインできませんでした</h2>
+                <p class="auth-result-message">
+                    {{ errorMessage || "入力内容を確認して、もう一度お試しください。" }}
+                </p>
+                <a class="login-btn auth-result-link" [href]="loginUrl">ログイン画面に戻る</a>
+            </section>
+        </div>
+    </main>
+} @else {
+    <header class="login-title">
+        <h1>NW Project</h1>
+        <p>Management System</p>
+    </header>
+    <main class="login-card">
+        @if (errorMessage) {
+            <p class="login-error" role="alert">{{ errorMessage }}</p>
+        }
+        <form [action]="loginUrl" method="post">
+            <div class="form-group">
+                <label for="userId">ユーザーID</label>
+                <input type="text" id="userId" name="userId" autocomplete="username" />
+            </div>
+            <div class="form-group">
+                <label for="password">パスワード</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" />
+            </div>
+            <input class="login-btn" id="loginBtn" type="submit" value="ログイン" />
+        </form>
+    </main>
+}
+<footer class="auth-result-footer"><p>Copyright tomi pre All Rights Reserved.</p></footer>

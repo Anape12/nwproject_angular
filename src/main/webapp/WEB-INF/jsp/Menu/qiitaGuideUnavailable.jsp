@@ -10,12 +10,9 @@
     </head>
     <body>
         <jsp:include page="/WEB-INF/jsp/common/header.jsp" />
-        <main class="workspace-home">
-            <section class="menu-section">
-                <h1>Qiita Guideを開けません</h1>
-                <p>読み上げアプリの接続先が設定されていません。管理者にご確認ください。</p>
-                <p><a href="${pageContext.request.contextPath}/BusinessMenu">業務メニューへ戻る</a></p>
-            </section>
-        </main>
+        <nw-qiita-unavailable
+            data-context-path="${pageContext.request.contextPath}"
+        ></nw-qiita-unavailable>
+        <noscript>この画面を利用するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

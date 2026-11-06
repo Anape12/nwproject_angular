@@ -11,97 +11,10 @@
     </head>
     <body>
         <jsp:include page="/WEB-INF/jsp/common/header.jsp" />
-        <main class="portal">
-            <section class="hero">
-                <div>
-                    <p>WORKSPACE</p>
-                    <h1>業務ダッシュボード</h1>
-                    <span>今日必要な情報と未処理の業務をまとめています。</span>
-                </div>
-                <form method="get">
-                    <input
-                        name="q"
-                        value="<c:out value='${query}'/>"
-                        minlength="2"
-                        placeholder="ユーザー・予定・報告書・チャットを検索"
-                    /><button>横断検索</button>
-                </form>
-            </section>
-            <c:if test="${not empty query}"
-                ><section class="card wide">
-                    <h2>「<c:out value="${query}" />」の検索結果</h2>
-                    <div class="results">
-                        <c:forEach var="r" items="${searchResults}"
-                            ><a href="${pageContext.request.contextPath}${r.url}"
-                                ><b>${r.type}｜<c:out value="${r.title}" /></b
-                                ><span><c:out value="${r.detail}" /></span></a></c:forEach
-                        ><c:if test="${empty searchResults}"><p>該当する情報はありません。</p></c:if>
-                    </div>
-                </section></c:if
-            >
-            <div class="stats">
-                <a href="${pageContext.request.contextPath}/WorkManagement"
-                    ><strong>${dashboard.attendance.recorded}</strong><span>今月の勤怠入力</span
-                    ><small>要対応 ${dashboard.attendance.actionable}件</small></a
-                ><a href="${pageContext.request.contextPath}/ReportApproval"
-                    ><strong>${dashboard.pendingApprovals}</strong><span>未処理の承認</span></a
-                >
-                <div><strong>${dashboard.unreadCount}</strong><span>未読通知</span></div>
-                <div><strong>${dashboard.attendance.overtime}</strong><span>今月の残業（分）</span></div>
-            </div>
-            <div class="grid">
-                <section class="card">
-                    <h2>本日の予定</h2>
-                    <c:forEach var="e" items="${dashboard.todayEvents}"
-                        ><a class="item" href="${pageContext.request.contextPath}/OpenCalender?edit=${e.event_id}"
-                            ><i style="background:${e.color}"></i><b><c:out value="${e.title}" /></b
-                            ><span>${e.start_at}</span></a
-                        ></c:forEach
-                    ><c:if test="${empty dashboard.todayEvents}"><p>本日の予定はありません。</p></c:if>
-                </section>
-                <section class="card">
-                    <h2>通知</h2>
-                    <c:forEach var="n" items="${dashboard.notifications}"
-                        ><div class="notice-row">
-                            <a href="${pageContext.request.contextPath}${n.link_url}"
-                                ><b><c:out value="${n.title}" /></b><span><c:out value="${n.message}" /></span
-                            ></a>
-                            <form method="post">
-                                <input type="hidden" name="notificationId" value="${n.notification_id}" /><button
-                                    title="既読にする"
-                                >
-                                    ✓
-                                </button>
-                            </form>
-                        </div></c:forEach
-                    ><c:if test="${empty dashboard.notifications}"><p>新しい通知はありません。</p></c:if>
-                </section>
-                <section class="card wide">
-                    <h2>最近の報告書</h2>
-                    <div class="results">
-                        <c:forEach var="r" items="${dashboard.recentReports}"
-                            ><a href="${pageContext.request.contextPath}/DairyWrite?edit=${r.report_id}"
-                                ><b><c:out value="${r.title}" /></b><span>${r.report_date} ・ ${r.status}</span></a
-                            ></c:forEach
-                        >
-                    </div>
-                </section>
-                <section class="card wide">
-                    <h2>自分の申請</h2>
-                    <c:forEach var="a" items="${dashboard.myApprovals}"
-                        ><div class="notice-row">
-                            <span>${a.application_type} ・ ${a.status} ・ ${a.submitted_at}</span
-                            ><c:if test="${a.status=='SUBMITTED'}"
-                                ><form method="post" onsubmit="return confirm('この申請を取り下げますか？')">
-                                    <input type="hidden" name="approvalId" value="${a.approval_id}" /><button>
-                                        取下げ
-                                    </button>
-                                </form></c:if
-                            >
-                        </div></c:forEach
-                    >
-                </section>
-            </div>
-        </main>
+        <nw-portal
+            data-context-path="${pageContext.request.contextPath}"
+            data-portal-error="<c:out value='${portalError}' />"
+        ></nw-portal>
+        <noscript>業務ダッシュボードを表示するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

@@ -20,6 +20,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.model.ChatRoomPermissionPolicy;
 import jp.nw.model.ErrorMessageLogic;
 import jp.nw.parts.DBBase;
+import jp.nw.util.PageJson;
 
 @WebServlet("/ChatMemberManage")
 public class ChatMemberManageController extends HttpServlet {
@@ -36,8 +37,8 @@ public class ChatMemberManageController extends HttpServlet {
         if (session.getAttribute("chatMemberCsrf") == null)
             session.setAttribute("chatMemberCsrf", UUID.randomUUID().toString());
         q.setAttribute("roomId", room);
-        q.setAttribute("availableUsers", available(room));
-        q.setAttribute("members", members(room));
+        PageJson.set(q, "availableJson", available(room).stream().map(MemberRow::from).toList());
+        PageJson.set(q, "membersJson", members(room).stream().map(MemberRow::from).toList());
         q.setAttribute("flash", session.getAttribute("chatMemberFlash"));
         session.removeAttribute("chatMemberFlash");
         q.getRequestDispatcher("/WEB-INF/jsp/chat/ChatMemberManage.jsp").forward(q, s);
@@ -101,5 +102,12 @@ public class ChatMemberManageController extends HttpServlet {
     private UserEntity user(HttpServletRequest q) {
         HttpSession s = q.getSession(false);
         return s == null ? null : (UserEntity) s.getAttribute("loginUser");
+    }
+
+    private record MemberRow(String userId, String firstName, String lastName, boolean ai) {
+        static MemberRow from(UserEntity user) {
+            return new MemberRow(user.getUserId(), user.getFirstName(), user.getLastName(),
+                    "AI".equals(user.getAccountType()));
+        }
     }
 }

@@ -1,0 +1,87 @@
+<main class="security-page">
+    <div class="page-head">
+        <div>
+            <p>AUDIT TRAIL</p>
+            <h1>監査ログ検索</h1>
+        </div>
+        <a [href]="contextPath + '/UserSecurityAdmin'">アカウント管理</a>
+    </div>
+
+    <form class="audit-filter" [action]="contextPath + '/AuditLog'" method="get">
+        <label>
+            ユーザーID
+            <input name="userId" [value]="query.get('userId') ?? ''" />
+        </label>
+        <label>
+            分類
+            <select name="category">
+                <option value="">すべて</option>
+                @for (category of categories; track category) {
+                    <option [value]="category" [selected]="query.get('category') === category">{{ category }}</option>
+                }
+            </select>
+        </label>
+        <label>
+            操作
+            <input name="action" [value]="query.get('action') ?? ''" placeholder="LOGIN, APPROVED..." />
+        </label>
+        <label>
+            結果
+            <select name="success">
+                <option value="">すべて</option>
+                <option value="true" [selected]="query.get('success') === 'true'">成功</option>
+                <option value="false" [selected]="query.get('success') === 'false'">失敗</option>
+            </select>
+        </label>
+        <label>
+            開始日
+            <input type="date" name="from" [value]="query.get('from') ?? ''" />
+        </label>
+        <label>
+            終了日
+            <input type="date" name="to" [value]="query.get('to') ?? ''" />
+        </label>
+        <button class="primary" type="submit">検索</button>
+    </form>
+
+    @if (logs(); as rows) {
+        <div class="audit-table-wrap">
+            <table class="audit-table">
+                <thead>
+                    <tr>
+                        <th>日時</th>
+                        <th>分類／操作</th>
+                        <th>実行者</th>
+                        <th>対象</th>
+                        <th>結果</th>
+                        <th>IP</th>
+                        <th>詳細</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (log of rows; track log) {
+                        <tr>
+                            <td>{{ log.createdAt }}</td>
+                            <td><strong>{{ log.eventCategory }}</strong><br />{{ log.eventAction }}</td>
+                            <td>{{ log.actorUserId || "-" }}</td>
+                            <td>{{ log.targetType }}<br />{{ log.targetId }}</td>
+                            <td>
+                                <span class="status" [class.active]="log.success" [class.disabled]="!log.success">
+                                    {{ log.success ? "成功" : "失敗" }}
+                                </span>
+                            </td>
+                            <td>{{ log.ipAddress }}</td>
+                            <td>{{ log.displayDetail }}</td>
+                        </tr>
+                    } @empty {
+                        <tr><td colspan="7" class="empty">該当する監査ログはありません。</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    } @else if (loadFailed()) {
+        <p role="alert">監査ログを読み込めませんでした。再度検索してください。</p>
+    } @else {
+        <p role="status">監査ログを読み込んでいます。</p>
+    }
+</main>

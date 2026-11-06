@@ -19,6 +19,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.entity.WorkReportEntity;
 import jp.nw.model.ApprovalLogic;
 import jp.nw.model.WorkReportLogic;
+import jp.nw.util.PageJson;
 
 @WebServlet("/DairyWrite")
 public class DairyWrite extends HttpServlet {
@@ -36,17 +37,22 @@ public class DairyWrite extends HttpServlet {
             session.setAttribute("reportCsrfToken", token);
         }
         WorkReportEntity selected = parseReport(request.getParameter("edit"), user.getUserId(), logic);
-        if (selected != null)
-            request.setAttribute("attachments",
-                    new jp.nw.model.AttachmentLogic().find("REPORT", String.valueOf(selected.getReportId())));
+        if (selected != null) {
+            PageJson.set(request, "selectedReportJson", new ReportDetail(ReportRow.from(selected),
+                    selected.isEditable(), selected.getBody(), selected.getReviewComment(),
+                    selected.getReviewerName(), selected.getReviewedAtLabel()));
+            PageJson.set(request, "attachmentsJson",
+                    new jp.nw.model.AttachmentLogic().find("REPORT", String.valueOf(selected.getReportId())).stream()
+                            .map(file -> new AttachmentRow(file.get("attachment_id").toString(),
+                                    (String) file.get("original_name"))).toList());
+        }
         LocalDate initialDate = LocalDate.now();
         try {
             if (request.getParameter("date") != null)
                 initialDate = LocalDate.parse(request.getParameter("date"));
         } catch (Exception ignored) {
         }
-        request.setAttribute("reports", logic.findOwn(user.getUserId()));
-        request.setAttribute("selectedReport", selected);
+        PageJson.set(request, "reportsJson", logic.findOwn(user.getUserId()).stream().map(ReportRow::from).toList());
         request.setAttribute("today", initialDate);
         request.setAttribute("csrfToken", token);
         request.setAttribute("flashMessage", session.getAttribute("reportFlash"));
@@ -54,6 +60,21 @@ public class DairyWrite extends HttpServlet {
         session.removeAttribute("reportFlash");
         session.removeAttribute("reportFlashType");
         request.getRequestDispatcher("/WEB-INF/jsp/report/reportWrite.jsp").forward(request, response);
+    }
+
+    private record ReportRow(String id, String title, String date, String updatedAtLabel, String status,
+            String statusLabel) {
+        static ReportRow from(WorkReportEntity report) {
+            return new ReportRow(Long.toString(report.getReportId()), report.getTitle(), report.getReportDateValue(),
+                    report.getUpdatedAtLabel(), report.getStatus(), report.getStatusLabel());
+        }
+    }
+
+    private record ReportDetail(ReportRow report, boolean editable, String body, String reviewComment,
+            String reviewerName, String reviewedAtLabel) {
+    }
+
+    private record AttachmentRow(String id, String name) {
     }
 
     @Override

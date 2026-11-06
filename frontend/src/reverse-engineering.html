@@ -1,0 +1,127 @@
+<main class="reverse-page">
+    <header class="reverse-header">
+        <div>
+            <p class="reverse-eyebrow">SYSTEM DESIGN</p>
+            <h1>設計リバース</h1>
+            <p>稼働中のDBスキーマと配備済みJavaクラスの構造を読み取り専用で確認します。</p>
+        </div>
+        <a [href]="contextPath + '/BusinessMenu'">業務メニューへ戻る</a>
+    </header>
+
+    <div class="reverse-tabs" role="tablist" aria-label="解析対象">
+        <button type="button" role="tab" [attr.aria-selected]="view() === 'database'" (click)="load('database')">
+            DBリバース
+        </button>
+        <button type="button" role="tab" [attr.aria-selected]="view() === 'java'" (click)="load('java')">
+            Javaリバース
+        </button>
+    </div>
+
+    <section class="reverse-toolbar" aria-label="表示条件">
+        <label>
+            検索
+            <input #term type="search" [value]="search()" (input)="updateSearch(term.value)"
+                placeholder="テーブル名またはクラス名" />
+        </label>
+        <span aria-live="polite">
+            @if (!loading() && !error()) { {{ filtered().length }} / {{ items().length }} 件 }
+        </span>
+        <button type="button" [disabled]="loading() || !!error()" (click)="download()">構造をJSONで保存</button>
+    </section>
+
+    @if (loading()) {
+        <p class="reverse-status" role="status">構造を読み込んでいます…</p>
+    } @else if (error()) {
+        <p class="reverse-status error" role="alert">{{ error() }}</p>
+    } @else {
+        <div class="reverse-layout" role="tabpanel">
+            <aside class="reverse-list-panel">
+                <h2>{{ view() === "database" ? "テーブル" : "クラス" }}</h2>
+                <div class="reverse-list">
+                    @for (item of filtered(); track item.name) {
+                        <button type="button" [title]="item.name" [class.active]="selected()?.name === item.name"
+                            (click)="selectedName.set(item.name)">{{ shortName(item.name) }}</button>
+                    } @empty {
+                        <p>一致する項目はありません。</p>
+                    }
+                </div>
+            </aside>
+            <section class="reverse-main-panel">
+                @if (selectedTable(); as table) {
+                    <h2>{{ table.name }}</h2>
+                    <p class="reverse-subtitle">{{ table.columns.length }} 列</p>
+                    <div class="reverse-table-wrap">
+                        <table class="reverse-table">
+                            <thead>
+                                <tr><th>列名</th><th>型</th><th>NULL</th><th>キー</th><th>デフォルト</th><th>備考</th></tr>
+                            </thead>
+                            <tbody>
+                                @for (column of table.columns; track column.name) {
+                                    <tr>
+                                        <td>{{ column.name }}</td>
+                                        <td>{{ column.type }}{{ column.size ? " (" + column.size + ")" : "" }}</td>
+                                        <td>{{ column.nullable ? "可" : "不可" }}</td>
+                                        <td>@if (column.primaryKey) { <span class="reverse-badge">PK</span> }</td>
+                                        <td>{{ column.defaultValue ?? "—" }}</td>
+                                        <td>{{ column.remarks || "—" }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                @if (selectedClass(); as type) {
+                    <span class="reverse-kind">{{ type.kind }}</span>
+                    <h2>{{ type.simpleName }}</h2>
+                    <p class="reverse-subtitle">{{ type.name }}</p>
+                    <h3>フィールド</h3>
+                    <ul class="reverse-code-list">
+                        @for (field of type.fields; track $index) {
+                            <li>{{ field.name }} : {{ field.type }}</li>
+                        } @empty { <li>表示対象なし</li> }
+                    </ul>
+                    <h3>公開メソッド</h3>
+                    <ul class="reverse-code-list">
+                        @for (method of type.methods; track $index) {
+                            <li>{{ method }}</li>
+                        } @empty { <li>表示対象なし</li> }
+                    </ul>
+                }
+                @if (selected(); as item) {
+                    <section class="reverse-diagram-panel">
+                        <h2>関係図</h2>
+                        <p>{{ relations().length ? relations().length + " 件の定義済み関係" : "定義済みの関係はありません。" }}</p>
+                        <svg role="img" aria-label="選択した項目の関係図" [attr.viewBox]="'0 0 760 ' + height()">
+                            @for (name of neighbours(); track name; let index = $index) {
+                                <line x1="430" [attr.y1]="height() / 2" x2="545" [attr.y2]="48 + index * 58"
+                                    stroke="#94a3b8" stroke-width="2" />
+                                <rect x="545" [attr.y]="28 + index * 58" width="195" height="40" rx="9"
+                                    fill="#fff" stroke="#cbd5e1" />
+                                <text x="557" [attr.y]="53 + index * 58" fill="#344054" font-size="13"
+                                    font-weight="500">{{ diagramLabel(name) }}<title>{{ shortName(name) }}</title></text>
+                            }
+                            <rect [attr.x]="neighbours().length ? 80 : 230"
+                                [attr.y]="neighbours().length ? height() / 2 - 26 : 76"
+                                [attr.width]="neighbours().length ? 350 : 300"
+                                [attr.height]="neighbours().length ? 52 : 48" rx="9" fill="#3157d5" />
+                            <text [attr.x]="neighbours().length ? 92 : 242"
+                                [attr.y]="neighbours().length ? height() / 2 + 5 : 105"
+                                fill="#fff" font-size="13" font-weight="700">{{ diagramLabel(item.name) }}<title>{{ shortName(item.name) }}</title></text>
+                            @if (relations().length > neighbours().length) {
+                                <text x="550" [attr.y]="height() - 7" fill="#667085" font-size="12">詳細な関係は下の一覧を参照</text>
+                            }
+                        </svg>
+                        <div class="reverse-relations">
+                            @for (relation of relations(); track $index) { <span>{{ relation.label }}</span> }
+                        </div>
+                    </section>
+                } @else {
+                    <p>項目を選択してください。</p>
+                }
+            </section>
+        </div>
+    }
+    <p class="reverse-note">
+        DBは外部キー制約、Javaは継承・実装・フィールド・公開メソッドの型参照を表示します。外部キーが定義されていない列やメソッド本体の呼び出し関係は推測しません。
+    </p>
+</main>

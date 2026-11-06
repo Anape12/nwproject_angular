@@ -22,6 +22,7 @@ import jp.nw.model.AuditLogLogic;
 import jp.nw.model.UserInsertLogic;
 import jp.nw.util.PermissionCheckUtil;
 import jp.nw.util.PermissionGetUtil;
+import jp.nw.util.PageJson;
 
 @WebServlet("/UserInsert")
 public class UserInsert extends HttpServlet {
@@ -45,14 +46,9 @@ public class UserInsert extends HttpServlet {
             session.setAttribute("userInsertCsrfToken", csrfToken);
         }
         request.setAttribute("csrfToken", csrfToken);
-        request.setAttribute("permissionLevels", PermissionGetUtil.getAllPermissionLevels().stream()
-                .filter(level -> PermissionCheckUtil.canManageRole((UserEntity) session.getAttribute("loginUser"),
-                        level.getPermissionId())).toList());
-        request.setAttribute("defaultExpiration", LocalDate.now().plusDays(90));
-        request.setAttribute("currentDate", LocalDate.now());
         request.setAttribute("successMessage", session.getAttribute("userInsertSuccess"));
         session.removeAttribute("userInsertSuccess");
-        request.getRequestDispatcher("/WEB-INF/jsp/RegUser/userInsert.jsp").forward(request, response);
+        render(request, response, session);
     }
 
     @Override
@@ -94,14 +90,24 @@ public class UserInsert extends HttpServlet {
             request.setAttribute("errorMessage", jp.nw.model.ErrorMessageLogic.forDisplay(e));
             setEnteredValues(request);
             request.setAttribute("csrfToken", session.getAttribute("userInsertCsrfToken"));
-            request.setAttribute("permissionLevels", PermissionGetUtil.getAllPermissionLevels().stream()
-                    .filter(level -> PermissionCheckUtil.canManageRole((UserEntity) session.getAttribute("loginUser"),
-                            level.getPermissionId())).toList());
-            request.setAttribute("defaultExpiration", LocalDate.now().plusDays(90));
-            request.setAttribute("currentDate", LocalDate.now());
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            request.getRequestDispatcher("/WEB-INF/jsp/RegUser/userInsert.jsp").forward(request, response);
+            render(request, response, session);
         }
+    }
+
+    private void render(HttpServletRequest request, HttpServletResponse response, HttpSession session)
+            throws ServletException, IOException {
+        UserEntity actor = (UserEntity) session.getAttribute("loginUser");
+        PageJson.set(request, "permissionLevelsJson", PermissionGetUtil.getAllPermissionLevels().stream()
+                .filter(level -> PermissionCheckUtil.canManageRole(actor, level.getPermissionId()))
+                .map(level -> new PermissionOption(level.getPermissionId(), level.getPermissionName())).toList());
+        LocalDate today = LocalDate.now();
+        request.setAttribute("defaultExpiration", today.plusDays(90));
+        request.setAttribute("currentDate", today);
+        request.getRequestDispatcher("/WEB-INF/jsp/RegUser/userInsert.jsp").forward(request, response);
+    }
+
+    private record PermissionOption(String id, String label) {
     }
 
     private UserEntity validateAndBuild(HttpServletRequest request) {

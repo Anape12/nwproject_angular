@@ -1,0 +1,21 @@
+<main style="padding-top: 30px">
+    <section style="text-align: center; max-width: 400px">
+        <p>選択アプリ【{{ appName }}】</p>
+        <form method="post" enctype="multipart/form-data" [action]="uploadUrl">
+            <input type="file" [name]="readMode ? 'READ_FILE' : 'FILE_INFO'" aria-label="ファイル" required /><br />
+            <input type="submit" [value]="readMode ? 'UploadRead' : 'Upload'" name="Upload" />
+        </form>
+        <p><button class="search-btn2" type="button" (click)="goBack()">戻る</button></p>
+        <p>Copyright tomi pre All Rights Reserved.</p>
+    </section>
+    @if (!readMode) {
+        <table id="grid">
+            <thead><tr><th scope="col">Name</th><th scope="col">Age</th></tr></thead>
+            <tbody>
+                @for (name of sampleRows; track name) {
+                    <tr><td>{{ name }}</td><td>99</td></tr>
+                }
+            </tbody>
+        </table>
+    }
+</main>

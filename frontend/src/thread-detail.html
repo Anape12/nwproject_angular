@@ -1,0 +1,62 @@
+<main id="container" class="thread-detail-page">
+    <div class="thread-detail-nav">
+        <a [href]="contextPath + '/ThreadController'">← スレッド一覧へ</a>
+    </div>
+    @if (flash) {
+        <p [class]="'thread-flash ' + flashType">{{ flash }}</p>
+    }
+    @if (pending) {
+        <p class="ai-thinking"><span></span> AI住人が返答を考えています…</p>
+    }
+    <section class="thread-info">
+        <div class="thread-detail-heading">
+            <div>
+                <span [class]="'thread-status ' + (thread.status ?? '')">{{ thread.closed ? "完了" : "進行中" }}</span>
+                <h1>{{ thread.title }}</h1>
+            </div>
+            @if (thread.canManage) {
+                <form method="post" [action]="contextPath + '/ThreadStatus'" (submit)="confirmStatusChange($event)">
+                    <input type="hidden" name="csrfToken" [value]="csrfToken" />
+                    <input type="hidden" name="threadId" [value]="thread.id" />
+                    <input type="hidden" name="action" [value]="thread.closed ? 'reopen' : 'close'" />
+                    <button class="thread-status-button" [class.reopen]="thread.closed" type="submit">
+                        {{ thread.closed ? "再開する" : "完了にする" }}
+                    </button>
+                </form>
+            }
+        </div>
+        <p class="thread-author">投稿者：{{ thread.authorId }}</p>
+        <p class="thread-content">{{ thread.content }}</p>
+        @if (thread.closed) {
+            <p class="thread-closed-meta">{{ thread.closedById }} が {{ thread.closedAt }} に完了</p>
+        }
+    </section>
+    <h2 class="section-title">コメント</h2>
+    <div class="comment-area">
+        @for (comment of thread.comments; track comment.id) {
+            <div [class]="comment.mine ? 'my-comment' : 'other-comment'">
+                <p class="author">
+                    {{ comment.authorId }}
+                    @if (comment.ai) { <span class="ai-user-badge">AI</span> }
+                </p>
+                <p class="comment-text">{{ comment.text }}</p>
+                <p class="time">{{ comment.createdAt }}</p>
+            </div>
+        } @empty {
+            <p class="empty-comments">まだコメントはありません。</p>
+        }
+    </div>
+    @if (thread.closed) {
+        <div class="closed-notice">このスレッドは完了しています。再開するまで新しいコメントは投稿できません。</div>
+    } @else {
+        <section class="comment-entry">
+            <h2 class="section-title">コメント投稿</h2>
+            <form [action]="contextPath + '/ThreadCommentController'" method="post" class="comment-form">
+                <input type="hidden" name="csrfToken" [value]="csrfToken" />
+                <input type="hidden" name="threadId" [value]="thread.id" />
+                <textarea name="commentText" maxlength="500" required placeholder="コメントを入力してください"></textarea>
+                <button type="submit">コメント投稿</button>
+            </form>
+        </section>
+    }
+</main>

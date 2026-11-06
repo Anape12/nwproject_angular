@@ -1,4 +1,7 @@
 .git
+.metals
+.bloop
+.angular
 node_modules
 target
 .build-deps/cache

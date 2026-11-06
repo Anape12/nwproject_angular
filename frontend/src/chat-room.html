@@ -1,0 +1,46 @@
+<main id="container" class="chat-container">
+    <h1 class="page-title">{{ roomName }}</h1>
+    @if (canManage) {
+        <a class="member-manage-link" [href]="membersUrl">メンバーを招待</a>
+    }
+
+    <div #chatArea id="chat-area" class="chat-area">
+        @for (message of messages(); track message.messageId) {
+            <div class="chat-message" [class.my-message]="message.postedById === userId"
+                [class.other-message]="message.postedById !== userId">
+                @if (message.postedById !== userId) {
+                    <div class="message-user">
+                        {{ message.postedByName }}
+                        @if (message.postedByAccountType === "AI") {
+                            <span class="ai-user-badge">AI</span>
+                        }
+                    </div>
+                }
+                <div class="message-body">{{ message.message }}</div>
+                <div class="message-time">{{ message.createdAt }}</div>
+            </div>
+        }
+    </div>
+
+    @if (sendFailed()) {
+        <p role="alert">メッセージを送信できませんでした。</p>
+    }
+    <form #form id="chat-form" class="comment-form" (submit)="send($event, input)">
+        <textarea #input id="commentText" name="commentText" maxlength="500" rows="1" required
+            aria-label="コメント" placeholder="コメントを入力（Shift + Enterで改行）"
+            (keydown)="onKeydown($event, form)"></textarea>
+        <button type="submit" [disabled]="sending()">{{ sending() ? "送信中…" : "送信" }}</button>
+    </form>
+    <div class="attachments">
+        @for (file of attachments; track file.id) {
+            <a [href]="contextPath + '/Attachment?id=' + file.id">{{ file.name }}</a>
+        }
+        <form method="post" enctype="multipart/form-data" [action]="contextPath + '/Attachment'">
+            <input type="hidden" name="csrfToken" [value]="csrfToken" />
+            <input type="hidden" name="ownerType" value="CHAT" />
+            <input type="hidden" name="ownerId" [value]="roomId" />
+            <input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.txt,.csv,.zip,.docx,.xlsx,.pptx" required />
+            <button type="submit">ファイル送信</button>
+        </form>
+    </div>
+</main>

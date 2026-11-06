@@ -1,0 +1,47 @@
+<main class="chat-create-container">
+    <div class="chat-create-heading">
+        <div>
+            <h1>メンバーを招待</h1>
+            <p>通常ユーザーとAI住人をグループチャットへ追加できます。</p>
+        </div>
+        <a class="chat-secondary-btn" [href]="roomUrl">チャットへ戻る</a>
+    </div>
+    @if (flash) {
+        <p class="chat-error" role="status">{{ flash }}</p>
+    }
+
+    <h2>参加中</h2>
+    <div class="chat-user-list">
+        @for (user of members; track user.userId) {
+            <div class="chat-user-item">
+                <div class="channel-icon">{{ user.ai ? "AI" : "👤" }}</div>
+                <div class="chat-user-info">
+                    <strong>{{ user.lastName }} {{ user.firstName }}
+                        @if (user.ai) { <span class="ai-user-badge">AI</span> }
+                    </strong>
+                    <span>{{ "@" + user.userId }}</span>
+                </div>
+            </div>
+        }
+    </div>
+    <h2>招待可能</h2>
+    <div class="chat-user-list">
+        @for (user of available; track user.userId) {
+            <form class="chat-user-item" method="post" [action]="contextPath + '/ChatMemberManage'">
+                <input type="hidden" name="csrfToken" [value]="csrfToken" />
+                <input type="hidden" name="roomId" [value]="roomId" />
+                <input type="hidden" name="userId" [value]="user.userId" />
+                <div class="channel-icon">{{ user.ai ? "AI" : "👤" }}</div>
+                <div class="chat-user-info">
+                    <strong>{{ user.lastName }} {{ user.firstName }}
+                        @if (user.ai) { <span class="ai-user-badge">AI</span> }
+                    </strong>
+                    <span>{{ "@" + user.userId }}</span>
+                </div>
+                <button class="chat-start-btn" type="submit">招待</button>
+            </form>
+        } @empty {
+            <p class="chat-empty">招待できるユーザーはいません。</p>
+        }
+    </div>
+</main>

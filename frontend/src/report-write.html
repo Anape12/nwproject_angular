@@ -1,0 +1,103 @@
+<main class="report-page">
+    <div class="report-heading">
+        <div>
+            <p class="eyebrow">WORK REPORT</p>
+            <h1>報告書作成</h1>
+            <p>下書きを保存し、内容を確認してから承認者へ提出できます。</p>
+        </div>
+    </div>
+    @if (flash) {
+        <div [class]="'notice ' + flashType" role="status">{{ flash }}</div>
+    }
+    <div class="report-layout">
+        <section class="report-list">
+            <div class="list-title">
+                <h2>自分の報告書</h2>
+                <a [href]="action">＋ 新規作成</a>
+            </div>
+            @for (report of reports; track report.id) {
+                <a class="report-list-item" [href]="action + '?edit=' + report.id">
+                    <div><strong>{{ report.title }}</strong><span>{{ report.date }} ・ 更新 {{ report.updatedAtLabel }}</span></div>
+                    <span [class]="'status ' + report.status">{{ report.statusLabel }}</span>
+                </a>
+            } @empty {
+                <p class="empty">報告書はまだありません。</p>
+            }
+        </section>
+        <section class="report-editor">
+            <h2>{{ selected ? "報告書詳細" : "新しい報告書" }}</h2>
+            @if (selected) {
+                <div class="attachments">
+                    <h3>添付ファイル</h3>
+                    @for (file of attachments; track file.id) {
+                        <a [href]="contextPath + '/Attachment?id=' + file.id">{{ file.name }}</a>
+                    }
+                    @if (selected.editable) {
+                        <form method="post" enctype="multipart/form-data" [action]="contextPath + '/Attachment'">
+                            <input type="hidden" name="csrfToken" [value]="attachmentCsrf" />
+                            <input type="hidden" name="ownerType" value="REPORT" />
+                            <input type="hidden" name="ownerId" [value]="selected.report.id" />
+                            <input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.txt,.csv,.zip,.docx,.xlsx,.pptx" required />
+                            <button type="submit">添付</button>
+                        </form>
+                    }
+                </div>
+            }
+            @if (!selected || selected.editable) {
+                <form method="post" [action]="action">
+                    <input type="hidden" name="csrfToken" [value]="csrfToken" />
+                    <input type="hidden" name="action" [value]="selected ? 'update' : 'create'" />
+                    @if (selected) {
+                        <input type="hidden" name="reportId" [value]="selected.report.id" />
+                    }
+                    <label>
+                        報告日<span>必須</span>
+                        <input type="date" name="reportDate" required [value]="selected ? selected.report.date : today" />
+                    </label>
+                    <label>
+                        タイトル<span>必須</span>
+                        <input type="text" name="title" maxlength="150" required [value]="selected ? selected.report.title : ''" />
+                    </label>
+                    <label>
+                        報告内容<span>必須</span>
+                        <textarea name="body" maxlength="10000" rows="15" required [value]="selected?.body ?? ''"
+                            placeholder="実施内容、結果、課題、次の対応などを記載してください。"></textarea>
+                    </label>
+                    <button class="primary" type="submit">下書きを保存</button>
+                </form>
+                @if (selected) {
+                    <div class="inline-actions">
+                        <form method="post" [action]="action">
+                            <input type="hidden" name="csrfToken" [value]="csrfToken" />
+                            <input type="hidden" name="action" value="submit" />
+                            <input type="hidden" name="reportId" [value]="selected.report.id" />
+                            <button class="submit" type="submit">承認者へ提出</button>
+                        </form>
+                        <form method="post" [action]="action" (submit)="confirmDelete($event)">
+                            <input type="hidden" name="csrfToken" [value]="csrfToken" />
+                            <input type="hidden" name="action" value="delete" />
+                            <input type="hidden" name="reportId" [value]="selected.report.id" />
+                            <button class="danger" type="submit">削除</button>
+                        </form>
+                    </div>
+                }
+            } @else {
+                <div class="report-readonly">
+                    <div class="meta">
+                        <span>{{ selected.report.date }}</span>
+                        <span [class]="'status ' + selected.report.status">{{ selected.report.statusLabel }}</span>
+                    </div>
+                    <h3>{{ selected.report.title }}</h3>
+                    <div class="report-body">{{ selected.body }}</div>
+                    @if (selected.reviewComment) {
+                        <div class="review-comment">
+                            <strong>承認者コメント</strong>
+                            <p>{{ selected.reviewComment }}</p>
+                            <small>{{ selected.reviewerName }} ・ {{ selected.reviewedAtLabel }}</small>
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+</main>

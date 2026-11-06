@@ -1,20 +1,33 @@
-# Initial Setup
+# NW Project Angular
 
-1. Generate project artifacts
+[日本語の起動手順](README_ja.md)
 
-    ```bash
-    ./mvnw clean install
-    ```
+## Run locally
 
-2. Build and start the Docker containers
-    ```bash
-    docker compose up -d --build
-    ```
+Use JDK 21 and Docker with Linux containers. From the repository root, create `.env` from `.env.template` on first setup and set `DB_PASSWORD` and `MYSQL_ROOT_PASSWORD`. Keep your existing `.env` if it is already configured.
 
-# Deploy Updated Java Application
+Prepare the private `jpa-security` dependency from an authorized checkout. Maven downloads Node.js, builds Angular, and packages the app for Tomcat. [Dependency setup](docs/birthday-encryption.md)
 
 ```bash
-docker restart my-tomcat
+bash scripts/bootstrap-security.sh
+./mvnw clean package
+```
+
+The Compose project name separates the Angular checkout's database volume. The container names and host ports in `.env.template` let the original `nwproject_docker` stack keep running. For an existing `.env`, add the five `NW_*` settings shown in the [Windows setup](README_ja.md).
+
+```bash
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml up -d db
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml run --rm flyway
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml up -d --build tomcat
+```
+
+After Flyway and Tomcat start successfully, open the [login page](http://localhost:8081/Login).
+
+## Apply changes
+
+```bash
+./mvnw package
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml restart tomcat
 ```
 
 # Apply Database Migrations (Flyway)
@@ -22,7 +35,7 @@ docker restart my-tomcat
 Run from the repository root with `.env` and the Compose file explicitly specified. See [Database migrations](docs/database-migrations.md) for status checks and recovery guidance.
 
 ```bash
-docker compose --env-file .env -f .devcontainer/docker-compose.yml run --rm flyway
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml run --rm flyway
 ```
 
 # Run Playwright Tests
@@ -69,22 +82,6 @@ JSP files are formatted with `prettier-plugin-jsp`. Legacy JSP files that use sy
 
 Use the [database migration procedure](docs/database-migrations.md); do not remove the DB volume for a routine migration.
 
-# Apply Modified Application
-
-1. Move to the project directory
-
-    ```bash
-    cd nwproject_docker
-    ```
-
-2. Build the project
-
-    ```bash
-    ./mvnw package
-    ```
-
-3. Perform a browser hard reload (Super Reload).
-
 # VS Code Workspace Cache
 
 ```text
@@ -93,7 +90,7 @@ Use the [database migration procedure](docs/database-migrations.md); do not remo
 
 # Tech Stack
 
--   Application: Java 21, Servlet 4.0 / JSP / JSTL, JavaScript, CSS; built as a WAR with Maven and run on Apache Tomcat 9.
+-   Application: Angular 21, TypeScript, Java 21, Servlet 4.0, and JSP/JSTL. Maven packages the WAR for Apache Tomcat 9.
 -   Application libraries: MySQL Connector/J, Jackson, Lombok, and Spring Security's BCrypt password encoder.
 -   Database: MySQL 8.0 with Flyway 11 SQL migrations.
 -   Local runtime: Docker Compose with Nginx as the reverse proxy and TLS termination.

@@ -1,7 +1,6 @@
 package jp.nw.controller;
 
 import java.io.IOException;
-import java.lang.management.ThreadInfo;
 import java.util.List;
 
 import javax.servlet.RequestDispatcher;
@@ -12,7 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import jp.nw.dao.ThreadDao;
-import jp.nw.dto.*;
+import jp.nw.dto.ThreadDto;
+import jp.nw.util.PageJson;
 
 /**
  * Servlet implementation class UserView
@@ -29,13 +29,19 @@ public class ThreadController extends HttpServlet {
 
 		List<ThreadDto> threadList = dao.findAll();
 
-		request.setAttribute("threadList", threadList);
+		PageJson.set(request, "threadsJson", threadList.stream()
+				.map(thread -> new ThreadRow(thread.getThreadId(), thread.getTitle(), thread.getContent(),
+						thread.getAuthorId(), thread.getStatus(), thread.isClosed()))
+				.toList());
 
 		RequestDispatcher dispatcher = request.getRequestDispatcher(
 				"/WEB-INF/jsp/thread/ThreadList.jsp");
 
 		dispatcher.forward(request, response);
 
+	}
+
+	private record ThreadRow(int threadId, String title, String content, String authorId, String status, boolean closed) {
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)

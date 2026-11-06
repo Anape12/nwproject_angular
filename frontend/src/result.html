@@ -1,0 +1,34 @@
+@switch (data.kind) {
+    @case ("calendar") {
+        <div>登録が完了しました</div>
+        <form [action]="contextPath + '/OpenCalender'" target="_blank" method="get">
+            <p><button class="search-btn3" type="submit">カレンダーへ戻る</button></p>
+        </form>
+    }
+    @case ("user") {
+        <div>登録が完了しました</div>
+        <form [action]="contextPath + '/UserView'" target="_blank" method="get">
+            <p><button class="search-btn3" type="submit">ユーザー一覧へ戻る</button></p>
+        </form>
+    }
+    @case ("registration") {
+        <p style="text-align: center">登録が完了しました</p>
+        <div style="text-align: center">
+            <p><button class="search-btn2" type="button" (click)="closeWindow()">ウィンドウを閉じる</button></p>
+        </div>
+    }
+    @case ("login-failure") {
+        <p>ログインに失敗しました</p>
+        <button class="search-btn2" type="button" (click)="goBack()">ログイン画面へ</button>
+    }
+    @case ("error") {
+        <h2>エラーが発生しました</h2>
+        @if (data.errorMessage) {
+            <p style="color: red" role="alert">{{ data.errorMessage }}</p>
+        }
+    }
+    @case ("logout") {
+        <p>ログアウトしました</p>
+        <a [href]="contextPath + '/Login'">トップへ</a>
+    }
+}

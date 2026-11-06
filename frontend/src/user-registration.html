@@ -1,0 +1,95 @@
+<main class="registration-page">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">USER MANAGEMENT</p>
+            <h1>新規ユーザー登録</h1>
+            <p>業務システムを利用するユーザーの基本情報とログイン情報を登録します。</p>
+        </div>
+        <button type="button" class="secondary-button" (click)="closeWindow()">閉じる</button>
+    </div>
+    @if (data.success) {
+        <div class="notice success" role="status"><span>✓</span>{{ data.success }}</div>
+    }
+    @if (data.error) {
+        <div class="notice error" role="alert"><span>!</span>{{ data.error }}</div>
+    }
+    <form class="registration-card" method="post" [action]="action">
+        <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
+        <section>
+            <div class="section-heading">
+                <span>1</span><div><h2>基本情報</h2><p>ユーザーの氏名と生年月日を入力してください。</p></div>
+            </div>
+            <div class="form-grid two-columns">
+                <label>姓<span class="required">必須</span>
+                    <input type="text" name="lastName" maxlength="36" autocomplete="family-name" required
+                        [value]="data.lastName ?? ''" />
+                </label>
+                <label>名<span class="required">必須</span>
+                    <input type="text" name="firstName" maxlength="36" autocomplete="given-name" required
+                        [value]="data.firstName ?? ''" />
+                </label>
+                <label class="full-width">生年月日<span class="required">必須</span>
+                    <input type="date" name="birthday" min="1900-01-01" [max]="data.currentDate ?? ''" required
+                        [value]="data.birthday ?? ''" />
+                </label>
+            </div>
+        </section>
+        <section>
+            <div class="section-heading">
+                <span>2</span><div><h2>アカウント情報</h2><p>ログインに使用するIDと権限を設定します。</p></div>
+            </div>
+            <div class="form-grid two-columns">
+                <label>ユーザーID<span class="required">必須</span>
+                    <input type="text" name="userId" minlength="4" maxlength="20" pattern="[A-Za-z][A-Za-z0-9_\-]{3,19}"
+                        autocomplete="off" required [value]="data.userId ?? ''" />
+                    <small>英字で始まる4～20文字の英数字・_・-</small>
+                </label>
+                <label>権限<span class="required">必須</span>
+                    <select name="permission" required>
+                        <option value="">選択してください</option>
+                        @for (level of permissions; track level.id) {
+                            <option [value]="level.id" [selected]="data.permission === level.id">{{ level.label }}</option>
+                        }
+                    </select>
+                </label>
+                <label class="full-width expiration-field">パスワード有効期限<span class="required">必須</span>
+                    <input type="date" name="passwordExpiration" [min]="data.currentDate ?? ''" required
+                        [value]="data.expiration ?? ''" />
+                    <small>期限を過ぎるとログインできなくなります。</small>
+                </label>
+            </div>
+        </section>
+        <section>
+            <div class="section-heading">
+                <span>3</span><div><h2>初期パスワード</h2><p>パスワードは暗号化して保存され、登録後に画面へ表示されません。</p></div>
+            </div>
+            <div class="form-grid two-columns">
+                <div>
+                    <label for="password">パスワード<span class="required">必須</span></label>
+                    <div class="password-field">
+                        <input id="password" [type]="showPassword() ? 'text' : 'password'" name="password"
+                            minlength="8" maxlength="72" autocomplete="new-password" required />
+                        <button type="button" class="visibility-button" (click)="showPassword.set(!showPassword())">
+                            {{ showPassword() ? "隠す" : "表示" }}
+                        </button>
+                    </div>
+                    <small>英字と数字を含む8～72文字</small>
+                </div>
+                <div>
+                    <label for="passwordConfirmation">パスワード（確認）<span class="required">必須</span></label>
+                    <div class="password-field">
+                        <input id="passwordConfirmation" [type]="showConfirmation() ? 'text' : 'password'"
+                            name="passwordConfirmation" minlength="8" maxlength="72" autocomplete="new-password" required />
+                        <button type="button" class="visibility-button" (click)="showConfirmation.set(!showConfirmation())">
+                            {{ showConfirmation() ? "隠す" : "表示" }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="submit-area">
+            <p>入力内容を確認して登録してください。</p>
+            <button class="primary-button" type="submit">ユーザーを登録</button>
+        </div>
+    </form>
+</main>

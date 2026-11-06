@@ -1,0 +1,113 @@
+<main class="report-page">
+    <div class="report-heading">
+        <div>
+            <p class="eyebrow">APPROVAL CENTER</p>
+            <h1>承認管理</h1>
+            <p>各種申請を共通画面で確認・承認します。</p>
+        </div>
+    </div>
+    @if (flash) {
+        <div [class]="'notice ' + flashType" role="status">{{ flash }}</div>
+    }
+    @if (canConfigure) {
+        <div class="batch-approval">
+            <form method="post" [action]="reviewAction">
+                <input type="hidden" name="csrfToken" [value]="csrfToken" />
+                <input type="hidden" name="action" value="route" />
+                <label class="batch-field">
+                    申請の種類
+                    <select name="applicationType">
+                        <option value="REPORT">報告書</option>
+                        <option value="ATTENDANCE">勤怠</option>
+                    </select>
+                </label>
+                <label class="batch-field batch-field-short">
+                    承認段階
+                    <input type="number" name="requiredSteps" min="1" max="5" value="1" />
+                </label>
+                <button class="submit" type="submit">承認段階を設定</button>
+            </form>
+            <form method="post" [action]="reviewAction">
+                <input type="hidden" name="csrfToken" [value]="csrfToken" />
+                <input type="hidden" name="action" value="delegate" />
+                <label class="batch-field">
+                    代理承認者ID
+                    <input name="delegateUserId" required placeholder="ユーザーID" />
+                </label>
+                <label class="batch-field">開始日 <input type="date" name="validFrom" required /></label>
+                <label class="batch-field">終了日 <input type="date" name="validTo" required /></label>
+                <button class="submit" type="submit">代理承認を設定</button>
+            </form>
+        </div>
+    }
+    <form class="batch-approval" method="post" [action]="reviewAction">
+        <input type="hidden" name="csrfToken" [value]="csrfToken" />
+        <strong class="batch-heading">承認待ちを一括処理</strong>
+        <div>
+            @for (item of applications; track item.id) {
+                @if (item.status === "SUBMITTED") {
+                    <label><input type="checkbox" name="approvalIds" [value]="item.id" /> {{ item.title }}</label>
+                }
+            }
+        </div>
+        <label class="batch-field batch-comment">
+            処理コメント
+            <input name="comment" maxlength="1000" placeholder="必要に応じて入力" />
+        </label>
+        <button type="submit" class="submit" name="decision" value="APPROVED">一括承認</button>
+        <button type="submit" class="danger" name="decision" value="REJECTED">一括差戻し</button>
+    </form>
+    <div class="report-layout">
+        <section class="report-list">
+            <div class="list-title"><h2>申請一覧</h2></div>
+            @for (item of applications; track item.id) {
+                <a class="report-list-item" [href]="action + '?id=' + item.id">
+                    <div>
+                        <strong><span [class]="'status ' + item.status">{{ item.typeLabel }}</span> {{ item.title }}</strong>
+                        <span>{{ item.applicantName }} ・ {{ item.targetDate }}</span>
+                    </div>
+                    <span [class]="'status ' + item.status">{{ item.statusLabel }}</span>
+                </a>
+            } @empty {
+                <p class="empty">申請はありません。</p>
+            }
+        </section>
+        <section class="report-editor">
+            @if (selected; as detail) {
+                <div class="report-readonly">
+                    <div class="meta">
+                        <span>{{ detail.application.typeLabel }} ・ {{ detail.application.applicantName }} ・ {{ detail.application.targetDate }}</span>
+                        <span [class]="'status ' + detail.application.status">{{ detail.application.statusLabel }}</span>
+                    </div>
+                    <h2>{{ detail.application.title }}</h2>
+                    <div class="report-body">{{ detail.detail }}</div>
+                    <div class="approval-history">
+                        <h3>承認履歴</h3>
+                        @for (event of detail.history; track $index) {
+                            <p><b>{{ event.action }}</b> ・ {{ event.actor }} ・ {{ event.actedAt }}<br />{{ event.comment }}</p>
+                        }
+                    </div>
+                    @if (detail.application.status === "SUBMITTED") {
+                        <form class="approval-form" method="post" [action]="reviewAction">
+                            <input type="hidden" name="csrfToken" [value]="csrfToken" />
+                            <input type="hidden" name="approvalId" [value]="detail.application.id" />
+                            <label>承認者コメント<textarea name="comment" maxlength="1000" rows="5"></textarea></label>
+                            <div class="inline-actions">
+                                <button type="submit" class="submit" name="decision" value="APPROVED">承認する</button>
+                                <button type="submit" class="danger" name="decision" value="REJECTED">差し戻す</button>
+                            </div>
+                        </form>
+                    } @else {
+                        <div class="review-comment">
+                            <strong>処理結果</strong>
+                            <p>{{ detail.reviewComment }}</p>
+                            <small>{{ detail.reviewerName }} ・ {{ detail.reviewedAtLabel }}</small>
+                        </div>
+                    }
+                </div>
+            } @else {
+                <div class="select-guide">左の一覧から申請を選択してください。</div>
+            }
+        </section>
+    </div>
+</main>

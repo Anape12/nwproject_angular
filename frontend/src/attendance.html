@@ -1,0 +1,170 @@
+<main class="attendance-page">
+    <div class="attendance-heading">
+        <div>
+            <p class="eyebrow">ATTENDANCE</p>
+            <h1>勤怠表入力</h1>
+            <p>勤務実績を日付単位または月単位で管理者へ申請できます。</p>
+        </div>
+        <div class="attendance-heading-actions">
+            <div class="month-navigation">
+                <a [href]="previousUrl" aria-label="前月">‹</a>
+                <strong>{{ data.year }}年 {{ data.month }}月</strong>
+                <a [href]="nextUrl" aria-label="翌月">›</a>
+            </div>
+            <form method="post" [action]="action" (submit)="confirm($event, data.month + '月の未申請勤怠をすべて申請しますか？')">
+                <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
+                <input type="hidden" name="year" [value]="data.year ?? ''" />
+                <input type="hidden" name="month" [value]="data.month ?? ''" />
+                <input type="hidden" name="action" value="submitMonth" />
+                <button class="month-submit" type="submit">この月を一括申請</button>
+            </form>
+        </div>
+    </div>
+    <div class="inline-actions">
+        <form method="post" [action]="attendanceAction">
+            <input type="hidden" name="action" value="clockIn" />
+            <button class="row-submit" type="submit">出勤打刻</button>
+        </form>
+        <form method="post" [action]="attendanceAction">
+            <input type="hidden" name="action" value="clockOut" />
+            <button class="month-submit" type="submit">退勤打刻</button>
+        </form>
+        <a class="edit-link" [href]="attendanceAction + '?month=' + data.monthKey">CSV出力</a>
+    </div>
+    <div class="attendance-summary">
+        <span>入力 <b>{{ summary.days }}</b>日</span><span>休暇 <b>{{ summary.leave }}</b>日</span>
+        <span>欠勤 <b>{{ summary.absent }}</b>日</span><span>残業 <b>{{ summary.overtime }}</b>分</span>
+        @if (closed) { <span class="approval-status APPROVED">月次締め済み</span> }
+    </div>
+    @if (data.canClose === "true") {
+        <form method="post" [action]="attendanceAction">
+            <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
+            <input type="hidden" name="month" [value]="data.monthKey ?? ''" />
+            <button class="edit-link" type="submit" name="action" [value]="closed ? 'reopen' : 'close'">
+                {{ closed ? "月次締めを解除" : "この月を締める" }}
+            </button>
+        </form>
+    }
+    @if (data.flash) {
+        <div [class]="'notice ' + (data.flashType ?? '')" role="status">{{ data.flash }}</div>
+    }
+    <div class="attendance-layout">
+        <section class="attendance-table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>日付</th><th>勤務区分</th><th>出勤</th><th>退勤</th><th>休憩</th>
+                        <th>実働</th><th>報告書</th><th>承認状態</th><th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (day of days; track day.date) {
+                        <tr [class.weekend]="day.weekend" [class.today]="day.today">
+                            <td><strong>{{ day.number }}日</strong><span>（{{ day.weekday }}）</span></td>
+                            @if (day.attendance; as item) {
+                                <td>{{ item.workTypeLabel }}</td><td>{{ item.clockIn }}</td><td>{{ item.clockOut }}</td>
+                                <td>{{ item.breakMinutes }}分</td><td>{{ item.workingTime }}</td>
+                                <td>
+                                    @if (item.reportId) {
+                                        <a class="report-link" [href]="reportAction + '?edit=' + item.reportId">{{ item.reportTitle }}</a>
+                                    } @else {
+                                        <span class="no-report">未設定</span>
+                                    }
+                                </td>
+                                <td><span [class]="'approval-status ' + (item.approvalStatus ?? '')">{{ item.approvalStatusLabel }}</span></td>
+                                <td>
+                                    <div class="row-actions">
+                                        <a class="edit-link" [href]="currentUrl + '&edit=' + item.id">{{ item.editable ? "編集" : "詳細" }}</a>
+                                        @if (item.editable) {
+                                            <form method="post" [action]="action" (submit)="confirm($event, 'この勤怠を管理者へ申請しますか？')">
+                                                <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
+                                                <input type="hidden" name="year" [value]="data.year ?? ''" />
+                                                <input type="hidden" name="month" [value]="data.month ?? ''" />
+                                                <input type="hidden" name="action" value="submit" />
+                                                <input type="hidden" name="attendanceId" [value]="item.id" />
+                                                <button class="row-submit" type="submit">申請</button>
+                                            </form>
+                                        }
+                                    </div>
+                                </td>
+                            } @else {
+                                <td colspan="5" class="unregistered">未入力</td>
+                                <td><a class="create-report-link" [href]="reportAction + '?date=' + day.date">報告書作成</a></td>
+                                <td>-</td>
+                                <td><a class="edit-link" [href]="currentUrl + '&date=' + day.date">入力</a></td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </section>
+        <aside class="attendance-form-card">
+            <h2>{{ selected ? "勤怠を編集" : "勤怠を入力" }}</h2>
+            <form method="post" [action]="action" id="attendance-form">
+                <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
+                <input type="hidden" name="year" [value]="data.year ?? ''" />
+                <input type="hidden" name="month" [value]="data.month ?? ''" />
+                <input type="hidden" name="action" [value]="selected ? 'update' : 'create'" />
+                @if (selected) {
+                    <input type="hidden" name="attendanceId" [value]="selected.id" />
+                }
+                <fieldset [disabled]="!!selected && !selected.editable">
+                    <label>勤務日<span>必須</span>
+                        <input #dateField id="workDate" type="date" name="workDate" required
+                            [value]="workDate()" (change)="changeDate(dateField.value)" />
+                    </label>
+                    <label>勤務区分<span>必須</span>
+                        <select #typeField id="workType" name="workType" required (change)="workType.set(typeField.value)">
+                            @for (type of workTypes; track type.id) {
+                                <option [value]="type.id" [selected]="workType() === type.id">{{ type.label }}</option>
+                            }
+                        </select>
+                    </label>
+                    <label>勤怠詳細
+                        <select name="attendanceType">
+                            @for (type of attendanceTypes; track type.id) {
+                                <option [value]="type.id" [selected]="(selected?.attendanceType ?? 'NORMAL') === type.id">
+                                    {{ type.label }}
+                                </option>
+                            }
+                        </select>
+                    </label>
+                    <div class="time-grid">
+                        <label>出勤時刻<input class="working-input" type="time" name="clockIn"
+                            [disabled]="nonWorking()" [required]="!nonWorking()" [value]="selected?.clockIn ?? '09:00'" /></label>
+                        <label>退勤時刻<input class="working-input" type="time" name="clockOut"
+                            [disabled]="nonWorking()" [required]="!nonWorking()" [value]="selected?.clockOut ?? '18:00'" /></label>
+                    </div>
+                    <label>休憩時間（分）<input class="working-input" type="number" name="breakMinutes" min="0" max="1440"
+                        [disabled]="nonWorking()" [required]="!nonWorking()" [value]="selected?.breakMinutes ?? 60" /></label>
+                    <label>関連する報告書（任意）
+                        <select #reportField id="reportId" name="reportId" (change)="reportId.set(reportField.value)">
+                            <option value="" [selected]="reportId() === ''">関連付けなし（勤怠のみ申請）</option>
+                            @for (report of matchingReports(); track report.id) {
+                                <option [value]="report.id" [selected]="reportId() === report.id">
+                                    {{ report.title }}（{{ report.statusLabel }}）
+                                </option>
+                            }
+                        </select>
+                        <small>報告書を設定しなくても勤怠単体で申請できます。関連付ける場合は勤務日と報告日が同じ報告書を選択してください。</small>
+                    </label>
+                    <a id="new-report-link" class="new-report" [href]="reportAction + '?date=' + workDate()">この日の報告書を作成</a>
+                    <label>備考<textarea name="note" maxlength="500" rows="4" [value]="selected?.note ?? ''"></textarea></label>
+                    @if (!selected || selected.editable) {
+                        <button class="primary" type="submit">保存</button>
+                    }
+                </fieldset>
+            </form>
+            @if (selected && selected.editable) {
+                <form method="post" [action]="action" (submit)="confirm($event, 'この勤怠情報を削除しますか？')">
+                    <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
+                    <input type="hidden" name="year" [value]="data.year ?? ''" />
+                    <input type="hidden" name="month" [value]="data.month ?? ''" />
+                    <input type="hidden" name="action" value="delete" />
+                    <input type="hidden" name="attendanceId" [value]="selected.id" />
+                    <button class="danger" type="submit">勤怠情報を削除</button>
+                </form>
+            }
+        </aside>
+    </div>
+</main>

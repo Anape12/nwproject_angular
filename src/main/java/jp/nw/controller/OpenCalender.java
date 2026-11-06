@@ -26,6 +26,7 @@ import jp.nw.entity.ScheduleEventEntity;
 import jp.nw.entity.UserEntity;
 import jp.nw.model.ScheduleCalendarDay;
 import jp.nw.model.ScheduleEventLogic;
+import jp.nw.util.PageJson;
 
 @WebServlet("/OpenCalender")
 public class OpenCalender extends HttpServlet {
@@ -51,21 +52,56 @@ public class OpenCalender extends HttpServlet {
             session.setAttribute("scheduleCsrfToken", csrfToken);
         }
 
-        request.setAttribute("calendarDays", createDays(month, gridStart, gridEnd, events));
+        PageJson.set(request, "daysJson", createDays(month, gridStart, gridEnd, events).stream()
+                .map(DayRow::from).toList());
         request.setAttribute("displayMonth", month);
         request.setAttribute("previousMonth", month.minusMonths(1));
         request.setAttribute("nextMonth", month.plusMonths(1));
         request.setAttribute("selectedDate", selectedDate);
-        request.setAttribute("editEvent", editEvent);
-        request.setAttribute("eventOwner",editEvent==null||loginUser.getUserId().equals(editEvent.getUserId()));request.setAttribute("eventParticipant",editEvent!=null&&logic.isParticipant(editEvent.getEventId(),loginUser.getUserId()));
-        if(editEvent!=null)request.setAttribute("attachments",new jp.nw.model.AttachmentLogic().find("SCHEDULE",String.valueOf(editEvent.getEventId())));
-        request.setAttribute("scheduleUsers",logic.users(loginUser.getUserId()));
+        if (editEvent != null) {
+            request.setAttribute("eventOwner", loginUser.getUserId().equals(editEvent.getUserId()));
+            request.setAttribute("eventParticipant", logic.isParticipant(editEvent.getEventId(), loginUser.getUserId()));
+            PageJson.set(request, "editEventJson", EditRow.from(editEvent));
+            PageJson.set(request, "attachmentsJson", new jp.nw.model.AttachmentLogic()
+                    .find("SCHEDULE", Long.toString(editEvent.getEventId())).stream()
+                    .map(file -> new AttachmentRow(file.get("attachment_id").toString(),
+                            (String) file.get("original_name"))).toList());
+        }
+        PageJson.set(request, "scheduleUsersJson", logic.users(loginUser.getUserId()));
         request.setAttribute("flashMessage", session.getAttribute("scheduleFlash"));
         request.setAttribute("flashType", session.getAttribute("scheduleFlashType"));
         request.setAttribute("csrfToken", csrfToken);
         session.removeAttribute("scheduleFlash");
         session.removeAttribute("scheduleFlashType");
         request.getRequestDispatcher("/WEB-INF/jsp/calender/calender.jsp").forward(request, response);
+    }
+
+    private record DayRow(String date, int number, boolean currentMonth, boolean today, List<EventRow> events) {
+        static DayRow from(ScheduleCalendarDay day) {
+            return new DayRow(day.getDateValue(), day.getDayOfMonth(), day.isCurrentMonth(), day.isToday(),
+                    day.getEvents().stream().map(EventRow::from).toList());
+        }
+    }
+
+    private record EventRow(String id, String title, String color, String time) {
+        static EventRow from(ScheduleEventEntity event) {
+            return new EventRow(Long.toString(event.getEventId()), event.getTitle(), event.getColor(),
+                    event.getTimeLabel());
+        }
+    }
+
+    private record EditRow(String id, String title, boolean allDay, String startDate, String endDate,
+            String startTime, String endTime, String color, String visibility, String recurrence,
+            String recurrenceUntil, String description) {
+        static EditRow from(ScheduleEventEntity event) {
+            return new EditRow(Long.toString(event.getEventId()), event.getTitle(), event.isAllDay(),
+                    event.getStartDateValue(), event.getEndDateValue(), event.getStartTimeValue(),
+                    event.getEndTimeValue(), event.getColor(), event.getVisibility(), event.getRecurrenceRule(),
+                    Objects.toString(event.getRecurrenceUntil(), ""), event.getDescription());
+        }
+    }
+
+    private record AttachmentRow(String id, String name) {
     }
 
     @Override

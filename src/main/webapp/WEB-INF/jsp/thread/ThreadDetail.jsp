@@ -12,98 +12,14 @@
     </head>
     <body>
         <jsp:include page="/WEB-INF/jsp/common/header.jsp" />
-        <main id="container" class="thread-detail-page">
-            <div class="thread-detail-nav">
-                <a href="${pageContext.request.contextPath}/ThreadController">← スレッド一覧へ</a>
-            </div>
-            <c:if test="${not empty threadFlash}"
-                ><p class="thread-flash ${threadFlashType}"><c:out value="${threadFlash}" /></p
-            ></c:if>
-            <c:if test="${aiResponsePending}"
-                ><p class="ai-thinking"><span></span> AI住人が返答を考えています…</p>
-                <script>
-                    setTimeout(function () {
-                        location.reload();
-                    }, 3000);
-                </script></c:if
-            >
-            <section class="thread-info">
-                <div class="thread-detail-heading">
-                    <div>
-                        <span class="thread-status ${thread.status}">${thread.closed ? '完了' : '進行中'}</span>
-                        <h1><c:out value="${thread.title}" /></h1>
-                    </div>
-                    <c:if test="${canManageThread}"
-                        ><form
-                            method="post"
-                            action="${pageContext.request.contextPath}/ThreadStatus"
-                            onsubmit="return confirm('${thread.closed ? 'このスレッドを再開しますか？' : 'このスレッドを完了にしますか？'}');"
-                        >
-                            <input type="hidden" name="csrfToken" value="${sessionScope.threadCsrfToken}" /><input
-                                type="hidden"
-                                name="threadId"
-                                value="${thread.threadId}"
-                            /><input type="hidden" name="action" value="${thread.closed ? 'reopen' : 'close'}" /><button
-                                class="thread-status-button ${thread.closed ? 'reopen' : ''}"
-                                type="submit"
-                            >
-                                ${thread.closed ? '再開する' : '完了にする'}
-                            </button>
-                        </form></c:if
-                    >
-                </div>
-                <p class="thread-author">投稿者：<c:out value="${thread.authorId}" /></p>
-                <p class="thread-content"><c:out value="${thread.threadContent}" /></p>
-                <c:if test="${thread.closed}"
-                    ><p class="thread-closed-meta">
-                        <c:out value="${thread.closedById}" /> が ${thread.closedAt} に完了
-                    </p></c:if
-                >
-            </section>
-            <h2 class="section-title">コメント</h2>
-            <div class="comment-area">
-                <c:if test="${empty commentList}"><p class="empty-comments">まだコメントはありません。</p></c:if
-                ><c:forEach var="comment" items="${commentList}"
-                    ><div class="${comment.authorId eq loginUserId ? 'my-comment' : 'other-comment'}">
-                        <p class="author">
-                            <c:out value="${comment.authorId}" />
-                            <c:if test="${comment.authorAccountType == 'AI'}"
-                                ><span class="ai-user-badge">AI</span></c:if
-                            >
-                        </p>
-                        <p class="comment-text"><c:out value="${comment.commentText}" /></p>
-                        <p class="time">${comment.createdAt}</p>
-                    </div></c:forEach
-                >
-            </div>
-            <c:choose
-                ><c:when test="${thread.closed}"
-                    ><div class="closed-notice">
-                        このスレッドは完了しています。再開するまで新しいコメントは投稿できません。
-                    </div></c:when
-                ><c:otherwise
-                    ><section class="comment-entry">
-                        <h2 class="section-title">コメント投稿</h2>
-                        <form
-                            action="${pageContext.request.contextPath}/ThreadCommentController"
-                            method="post"
-                            class="comment-form"
-                        >
-                            <input type="hidden" name="csrfToken" value="${sessionScope.threadCsrfToken}" /><input
-                                type="hidden"
-                                name="threadId"
-                                value="${thread.threadId}"
-                            /><textarea
-                                name="commentText"
-                                maxlength="500"
-                                required
-                                placeholder="コメントを入力してください"
-                            ></textarea
-                            ><button type="submit">コメント投稿</button>
-                        </form>
-                    </section></c:otherwise
-                ></c:choose
-            >
-        </main>
+        <nw-thread-detail
+            data-context-path="${pageContext.request.contextPath}"
+            data-thread="<c:out value='${threadJson}' />"
+            data-csrf-token="<c:out value='${sessionScope.threadCsrfToken}' />"
+            data-flash="<c:out value='${threadFlash}' />"
+            data-flash-type="<c:out value='${threadFlashType}' />"
+            data-pending="${aiResponsePending}"
+        ></nw-thread-detail>
+        <noscript>スレッドを表示するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

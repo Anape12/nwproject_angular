@@ -11,60 +11,14 @@
     </head>
     <body>
         <jsp:include page="/WEB-INF/jsp/common/header.jsp" />
-        <main class="chat-create-container">
-            <div class="chat-create-heading">
-                <div>
-                    <h1>メンバーを招待</h1>
-                    <p>通常ユーザーとAI住人をグループチャットへ追加できます。</p>
-                </div>
-                <a class="chat-secondary-btn" href="${pageContext.request.contextPath}/ChatChanelRoom?roomId=${roomId}"
-                    >チャットへ戻る</a
-                >
-            </div>
-            <c:if test="${not empty flash}"
-                ><p class="chat-error"><c:out value="${flash}" /></p
-            ></c:if>
-            <h2>参加中</h2>
-            <div class="chat-user-list">
-                <c:forEach var="user" items="${members}"
-                    ><div class="chat-user-item">
-                        <div class="channel-icon">${user.accountType=='AI'?'AI':'👤'}</div>
-                        <div class="chat-user-info">
-                            <strong
-                                ><c:out value="${user.lastName}" /> <c:out value="${user.firstName}" />
-                                <c:if test="${user.accountType=='AI'}"
-                                    ><span class="ai-user-badge">AI</span></c:if
-                                ></strong
-                            ><span>@<c:out value="${user.userId}" /></span>
-                        </div></div
-                ></c:forEach>
-            </div>
-            <h2>招待可能</h2>
-            <div class="chat-user-list">
-                <c:forEach var="user" items="${availableUsers}"
-                    ><form
-                        class="chat-user-item"
-                        method="post"
-                        action="${pageContext.request.contextPath}/ChatMemberManage"
-                    >
-                        <input type="hidden" name="csrfToken" value="${sessionScope.chatMemberCsrf}" /><input
-                            type="hidden"
-                            name="roomId"
-                            value="${roomId}"
-                        /><input type="hidden" name="userId" value="${user.userId}" />
-                        <div class="channel-icon">${user.accountType=='AI'?'AI':'👤'}</div>
-                        <div class="chat-user-info">
-                            <strong
-                                ><c:out value="${user.lastName}" /> <c:out value="${user.firstName}" />
-                                <c:if test="${user.accountType=='AI'}"
-                                    ><span class="ai-user-badge">AI</span></c:if
-                                ></strong
-                            ><span>@<c:out value="${user.userId}" /></span>
-                        </div>
-                        <button class="chat-start-btn" type="submit">招待</button>
-                    </form></c:forEach
-                ><c:if test="${empty availableUsers}"><p class="chat-empty">招待できるユーザーはいません。</p></c:if>
-            </div>
-        </main>
+        <nw-chat-members
+            data-context-path="${pageContext.request.contextPath}"
+            data-room-id="<c:out value='${roomId}' />"
+            data-csrf-token="<c:out value='${sessionScope.chatMemberCsrf}' />"
+            data-flash="<c:out value='${flash}' />"
+            data-members="<c:out value='${membersJson}' />"
+            data-available="<c:out value='${availableJson}' />"
+        ></nw-chat-members>
+        <noscript>メンバー管理を利用するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

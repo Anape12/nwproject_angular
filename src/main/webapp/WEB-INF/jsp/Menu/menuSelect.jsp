@@ -11,51 +11,12 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
     </head>
     <body class="mode-body">
-        <header class="mode-header">
-            <a href="${pageContext.request.contextPath}/MenuSelect">NW Project</a
-            ><span
-                ><c:out value="${sessionScope.loginUser.lastName}" />
-                <c:out value="${sessionScope.loginUser.firstName}" /> さん</span
-            >
-        </header>
-        <main class="mode-select">
-            <div class="mode-intro">
-                <span>SELECT WORKSPACE</span>
-                <h1>利用するメニューを選択</h1>
-                <p>目的に合わせて作業スペースを選んでください。後からいつでも切り替えられます。</p>
-            </div>
-            <div class="mode-grid">
-                <a class="mode-card communication" href="${pageContext.request.contextPath}/CommunicationMenu"
-                    ><span class="mode-icon"><i class="fa-solid fa-comments"></i></span>
-                    <div class="mode-copy">
-                        <small>COMMUNICATION</small>
-                        <h2>チャットメニュー</h2>
-                        <p>チャットとスレッドに集中して、メンバーとのやり取りや情報共有を行います。</p>
-                        <div class="mode-features">
-                            <span><i class="fa-solid fa-comment-dots"></i> チャット</span
-                            ><span><i class="fa-solid fa-users"></i> スレッド</span>
-                        </div>
-                    </div>
-                    <span class="mode-open">開く <i class="fa-solid fa-arrow-right"></i></span
-                ></a>
-                <a class="mode-card business" href="${pageContext.request.contextPath}/BusinessMenu"
-                    ><span class="mode-icon"><i class="fa-solid fa-briefcase"></i></span>
-                    <div class="mode-copy">
-                        <small>BUSINESS</small>
-                        <h2>業務メニュー</h2>
-                        <p>勤怠、報告書、予定、承認など、NW Projectのすべての業務機能を利用します。</p>
-                        <div class="mode-features">
-                            <span><i class="fa-solid fa-business-time"></i> 勤怠</span
-                            ><span><i class="fa-solid fa-file-pen"></i> 報告書</span
-                            ><span><i class="fa-solid fa-calendar-days"></i> 予定</span>
-                        </div>
-                    </div>
-                    <span class="mode-open">開く <i class="fa-solid fa-arrow-right"></i></span
-                ></a>
-            </div>
-            <form class="mode-logout" action="${pageContext.request.contextPath}/Logout" method="get">
-                <button><i class="fa-solid fa-right-from-bracket"></i> ログアウト</button>
-            </form>
-        </main>
+        <nw-menu-select
+            data-context-path="${pageContext.request.contextPath}"
+            data-last-name="<c:out value='${sessionScope.loginUser.lastName}' />"
+            data-first-name="<c:out value='${sessionScope.loginUser.firstName}' />"
+        ></nw-menu-select>
+        <script type="module" src="${pageContext.request.contextPath}/js/angular/main.js"></script>
+        <noscript>メニューを利用するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

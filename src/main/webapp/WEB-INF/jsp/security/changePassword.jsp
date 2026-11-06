@@ -11,37 +11,11 @@
     </head>
     <body>
         <jsp:include page="/WEB-INF/jsp/common/header.jsp" />
-
-        <main class="security-page narrow">
-            <section class="security-card">
-                <h1>パスワード変更</h1>
-                <p>安全のため、英字と数字を含む8文字以上を設定してください。</p>
-
-                <c:if test="${not empty errorMessage}">
-                    <div class="alert error"><c:out value="${errorMessage}" /></div>
-                </c:if>
-
-                <form method="post">
-                    <input type="hidden" name="csrfToken" value="${csrfToken}" />
-
-                    <label>
-                        現在のパスワード
-                        <input type="password" name="currentPassword" required autocomplete="current-password" />
-                    </label>
-
-                    <label>
-                        新しいパスワード
-                        <input type="password" name="newPassword" required autocomplete="new-password" />
-                    </label>
-
-                    <label>
-                        新しいパスワード（確認）
-                        <input type="password" name="confirmation" required autocomplete="new-password" />
-                    </label>
-
-                    <button class="primary" type="submit">パスワードを変更</button>
-                </form>
-            </section>
-        </main>
+        <nw-change-password
+            data-context-path="${pageContext.request.contextPath}"
+            data-error-message="<c:out value='${errorMessage}' />"
+            data-csrf-token="<c:out value='${csrfToken}' />"
+        ></nw-change-password>
+        <noscript>この画面を利用するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

@@ -11,160 +11,17 @@
     </head>
     <body>
         <jsp:include page="/WEB-INF/jsp/common/header.jsp" />
-        <main class="report-page">
-            <div class="report-heading">
-                <div>
-                    <p class="eyebrow">WORK REPORT</p>
-                    <h1>報告書作成</h1>
-                    <p>下書きを保存し、内容を確認してから承認者へ提出できます。</p>
-                </div>
-            </div>
-            <c:if test="${not empty flashMessage}"
-                ><div class="notice ${flashType}"><c:out value="${flashMessage}" /></div
-            ></c:if>
-            <div class="report-layout">
-                <section class="report-list">
-                    <div class="list-title">
-                        <h2>自分の報告書</h2>
-                        <a href="${pageContext.request.contextPath}/DairyWrite">＋ 新規作成</a>
-                    </div>
-                    <c:forEach var="report" items="${reports}"
-                        ><a
-                            class="report-list-item"
-                            href="${pageContext.request.contextPath}/DairyWrite?edit=${report.reportId}"
-                            ><div>
-                                <strong><c:out value="${report.title}" /></strong
-                                ><span>${report.reportDate} ・ 更新 ${report.updatedAtLabel}</span>
-                            </div>
-                            <span class="status ${report.status}">${report.statusLabel}</span></a
-                        ></c:forEach
-                    >
-                    <c:if test="${empty reports}"><p class="empty">報告書はまだありません。</p></c:if>
-                </section>
-                <section class="report-editor">
-                    <h2>${empty selectedReport ? '新しい報告書' : '報告書詳細'}</h2>
-                    <c:if test="${not empty selectedReport}"
-                        ><div class="attachments">
-                            <h3>添付ファイル</h3>
-                            <c:forEach var="f" items="${attachments}"
-                                ><a href="${pageContext.request.contextPath}/Attachment?id=${f.attachment_id}"
-                                    ><c:out value="${f.original_name}" /></a></c:forEach
-                            ><c:if test="${selectedReport.editable}"
-                                ><form
-                                    method="post"
-                                    enctype="multipart/form-data"
-                                    action="${pageContext.request.contextPath}/Attachment"
-                                >
-                                    <input
-                                        type="hidden"
-                                        name="csrfToken"
-                                        value="${sessionScope.attachmentCsrfToken}"
-                                    /><input type="hidden" name="ownerType" value="REPORT" /><input
-                                        type="hidden"
-                                        name="ownerId"
-                                        value="${selectedReport.reportId}"
-                                    /><input
-                                        type="file"
-                                        name="file"
-                                        accept=".pdf,.png,.jpg,.jpeg,.gif,.txt,.csv,.zip,.docx,.xlsx,.pptx"
-                                        required
-                                    /><button>添付</button>
-                                </form></c:if
-                            >
-                        </div></c:if
-                    >
-                    <c:choose
-                        ><c:when test="${empty selectedReport || selectedReport.editable}"
-                            ><form method="post" action="${pageContext.request.contextPath}/DairyWrite">
-                                <input type="hidden" name="csrfToken" value="${csrfToken}" /><input
-                                    type="hidden"
-                                    name="action"
-                                    value="${empty selectedReport ? 'create' : 'update'}"
-                                /><c:if test="${not empty selectedReport}"
-                                    ><input type="hidden" name="reportId" value="${selectedReport.reportId}"
-                                /></c:if>
-                                <label
-                                    >報告日<span>必須</span
-                                    ><input
-                                        type="date"
-                                        name="reportDate"
-                                        required
-                                        value="${empty selectedReport ? today : selectedReport.reportDateValue}" /></label
-                                ><label
-                                    >タイトル<span>必須</span
-                                    ><input
-                                        type="text"
-                                        name="title"
-                                        maxlength="150"
-                                        required
-                                        value="<c:out value='${selectedReport.title}'/>" /></label
-                                ><label
-                                    >報告内容<span>必須</span
-                                    ><textarea
-                                        name="body"
-                                        maxlength="10000"
-                                        rows="15"
-                                        required
-                                        placeholder="実施内容、結果、課題、次の対応などを記載してください。"
-                                    >
-<c:out value="${selectedReport.body}"/></textarea
-                                    >
-                                </label>
-                                <button class="primary" type="submit">下書きを保存</button>
-                            </form>
-                            <c:if test="${not empty selectedReport}"
-                                ><div class="inline-actions">
-                                    <form method="post" action="${pageContext.request.contextPath}/DairyWrite">
-                                        <input type="hidden" name="csrfToken" value="${csrfToken}" /><input
-                                            type="hidden"
-                                            name="action"
-                                            value="submit"
-                                        /><input
-                                            type="hidden"
-                                            name="reportId"
-                                            value="${selectedReport.reportId}"
-                                        /><button class="submit" type="submit">承認者へ提出</button>
-                                    </form>
-                                    <form
-                                        method="post"
-                                        action="${pageContext.request.contextPath}/DairyWrite"
-                                        onsubmit="return confirm('この下書きを削除しますか？')"
-                                    >
-                                        <input type="hidden" name="csrfToken" value="${csrfToken}" /><input
-                                            type="hidden"
-                                            name="action"
-                                            value="delete"
-                                        /><input
-                                            type="hidden"
-                                            name="reportId"
-                                            value="${selectedReport.reportId}"
-                                        /><button class="danger" type="submit">削除</button>
-                                    </form>
-                                </div></c:if
-                            ></c:when
-                        >
-                        <c:otherwise
-                            ><div class="report-readonly">
-                                <div class="meta">
-                                    <span>${selectedReport.reportDate}</span
-                                    ><span class="status ${selectedReport.status}">${selectedReport.statusLabel}</span>
-                                </div>
-                                <h3><c:out value="${selectedReport.title}" /></h3>
-                                <div class="report-body"><c:out value="${selectedReport.body}" /></div>
-                                <c:if test="${not empty selectedReport.reviewComment}"
-                                    ><div class="review-comment">
-                                        <strong>承認者コメント</strong>
-                                        <p><c:out value="${selectedReport.reviewComment}" /></p>
-                                        <small
-                                            >${selectedReport.reviewerName} ・ ${selectedReport.reviewedAtLabel}</small
-                                        >
-                                    </div></c:if
-                                >
-                            </div></c:otherwise
-                        ></c:choose
-                    >
-                </section>
-            </div>
-        </main>
+        <nw-report-write
+            data-context-path="${pageContext.request.contextPath}"
+            data-csrf-token="<c:out value='${csrfToken}' />"
+            data-attachment-csrf="<c:out value='${sessionScope.attachmentCsrfToken}' />"
+            data-today="<c:out value='${today}' />"
+            data-flash="<c:out value='${flashMessage}' />"
+            data-flash-type="<c:out value='${flashType}' />"
+            data-reports="<c:out value='${reportsJson}' />"
+            data-selected="<c:out value='${selectedReportJson}' />"
+            data-attachments="<c:out value='${attachmentsJson}' />"
+        ></nw-report-write>
+        <noscript>報告書を利用するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

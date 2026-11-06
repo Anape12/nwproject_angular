@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -21,6 +22,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.domain.user.PermissionAction;
 import jp.nw.model.ApprovalLogic;
 import jp.nw.util.PermissionCheckUtil;
+import jp.nw.util.PageJson;
 
 @WebServlet("/ReportApproval")
 public class ReportApprovalController extends HttpServlet {
@@ -37,12 +39,15 @@ public class ReportApprovalController extends HttpServlet {
             token = UUID.randomUUID().toString();
             session.setAttribute("approvalCsrfToken", token);
         }
-        q.setAttribute("applications", l.findAll());
+        PageJson.set(q, "applicationsJson", l.findAll().stream().map(ApplicationRow::from).toList());
         q.setAttribute("canConfigureApprovals", PermissionCheckUtil.can(u, PermissionAction.APPROVAL_CONFIGURE));
         ApprovalRequestEntity selected = selected(q.getParameter("id"), l);
-        q.setAttribute("selected", selected);
-        if (selected != null)
-            q.setAttribute("approvalHistory", l.history(selected.getApprovalId()));
+        if (selected != null) {
+            PageJson.set(q, "selectedJson", new ApplicationDetail(ApplicationRow.from(selected),
+                    selected.getDetail(), selected.getReviewComment(), selected.getReviewerName(),
+                    selected.getReviewedAtLabel(), l.history(selected.getApprovalId()).stream()
+                            .map(HistoryRow::from).toList()));
+        }
         q.setAttribute("csrfToken", token);
         q.setAttribute("flashMessage", session.getAttribute("approvalFlash"));
         q.setAttribute("flashType", session.getAttribute("approvalFlashType"));
@@ -112,5 +117,25 @@ public class ReportApprovalController extends HttpServlet {
     private void flash(HttpSession s, String m, String t) {
         s.setAttribute("approvalFlash", m);
         s.setAttribute("approvalFlashType", t);
+    }
+
+    private record ApplicationRow(String id, String title, String typeLabel, String applicantName, String targetDate,
+            String status, String statusLabel) {
+        static ApplicationRow from(ApprovalRequestEntity item) {
+            return new ApplicationRow(Long.toString(item.getApprovalId()), item.getTitle(), item.getTypeLabel(),
+                    item.getApplicantName(), Objects.toString(item.getTargetDate(), ""), item.getStatus(),
+                    item.getStatusLabel());
+        }
+    }
+
+    private record ApplicationDetail(ApplicationRow application, String detail, String reviewComment,
+            String reviewerName, String reviewedAtLabel, List<HistoryRow> history) {
+    }
+
+    private record HistoryRow(String action, String actor, String actedAt, String comment) {
+        static HistoryRow from(Map<String, Object> history) {
+            return new HistoryRow((String) history.get("action"), (String) history.get("acted_by"),
+                    Objects.toString(history.get("acted_at"), ""), (String) history.get("comment"));
+        }
     }
 }

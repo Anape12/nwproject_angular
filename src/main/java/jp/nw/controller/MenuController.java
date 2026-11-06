@@ -1,6 +1,10 @@
 package jp.nw.controller;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,6 +19,8 @@ import jp.nw.util.PermissionCheckUtil;
 @WebServlet(urlPatterns = { "/MenuSelect", "/BusinessMenu", "/CommunicationMenu" })
 public class MenuController extends HttpServlet {
     private static final long serialVersionUID = 1L;
+    private static final DateTimeFormatter HOME_DATE =
+            DateTimeFormatter.ofPattern("yyyy年M月d日（E）", Locale.JAPANESE);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -38,9 +44,7 @@ public class MenuController extends HttpServlet {
         request.setAttribute("canUseExternalTools",
                 PermissionCheckUtil.can(user, PermissionAction.EXTERNAL_TOOLS_VIEW));
         request.setAttribute("canReviewApprovals", new jp.nw.model.ApprovalLogic().canReview(user));
-        String page = PermissionCheckUtil.can(user, PermissionAction.USER_MANAGE)
-                ? "/WEB-INF/jsp/Menu/perMenu.jsp"
-                : "/WEB-INF/jsp/Menu/genMenu.jsp";
-        request.getRequestDispatcher(page).forward(request, response);
+        request.setAttribute("todayLabel", LocalDate.now(ZoneId.of("Asia/Tokyo")).format(HOME_DATE));
+        request.getRequestDispatcher("/WEB-INF/jsp/Menu/menuHome.jsp").forward(request, response);
     }
 }

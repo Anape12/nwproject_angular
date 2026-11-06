@@ -19,6 +19,7 @@ import jp.nw.domain.user.PermissionStatus;
 import jp.nw.model.AuditLogLogic;
 import jp.nw.model.UserSecurityLogic;
 import jp.nw.util.PermissionCheckUtil;
+import jp.nw.util.PageJson;
 
 @WebServlet("/UserSecurityAdmin")
 public class UserSecurityAdminController extends HttpServlet {
@@ -35,8 +36,10 @@ public class UserSecurityAdminController extends HttpServlet {
             session.setAttribute("userSecurityCsrf", token);
         }
         q.setAttribute("csrfToken", token);
-        q.setAttribute("canManageSystemUsers", PermissionCheckUtil.hasRole(u, PermissionStatus.SYSTEM_ADMINISTRATOR));
-        q.setAttribute("users", new UserSecurityLogic().findAll());
+        boolean canManageSystemUsers = PermissionCheckUtil.hasRole(u, PermissionStatus.SYSTEM_ADMINISTRATOR);
+        q.setAttribute("canManageSystemUsers", canManageSystemUsers);
+        PageJson.set(q, "usersJson", new UserSecurityLogic().findAll().stream()
+                .map(account -> AccountRow.from(account, canManageSystemUsers)).toList());
         q.setAttribute("flash", session.getAttribute("securityFlash"));
         q.setAttribute("flashType", session.getAttribute("securityFlashType"));
         session.removeAttribute("securityFlash");
@@ -94,5 +97,17 @@ public class UserSecurityAdminController extends HttpServlet {
     private void flash(HttpSession s, String m, String t) {
         s.setAttribute("securityFlash", m);
         s.setAttribute("securityFlashType", t);
+    }
+
+    private record AccountRow(String userId, String firstName, String lastName, String accountType, String permission,
+            boolean disabled, String lastLoginAt, String lockedUntil, int failedLoginCount,
+            boolean forcePasswordChange, boolean manageable) {
+        static AccountRow from(UserEntity user, boolean canManageSystemUsers) {
+            return new AccountRow(user.getUserId(), user.getFirstName(), user.getLastName(), user.getAccountType(),
+                    user.getPermission(), user.isAccountDisabled(), Objects.toString(user.getLastLoginAt(), null),
+                    Objects.toString(user.getLockedUntil(), null), user.getFailedLoginCount(),
+                    user.isForcePasswordChange(),
+                    !"AI".equals(user.getAccountType()) && (!"0".equals(user.getPermission()) || canManageSystemUsers));
+        }
     }
 }

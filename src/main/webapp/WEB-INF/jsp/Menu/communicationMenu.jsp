@@ -11,49 +11,12 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
     </head>
     <body class="mode-body communication-body">
-        <header class="mode-header">
-            <a href="${pageContext.request.contextPath}/CommunicationMenu"
-                ><i class="fa-solid fa-comments"></i> NW Communication</a
-            >
-            <div>
-                <a class="switch-mode" href="${pageContext.request.contextPath}/MenuSelect"
-                    ><i class="fa-solid fa-table-cells-large"></i> メニュー切替</a
-                ><span
-                    ><c:out value="${sessionScope.loginUser.lastName}" />
-                    <c:out value="${sessionScope.loginUser.firstName}" /> さん</span
-                >
-            </div>
-        </header>
-        <main class="communication-home">
-            <div class="communication-intro">
-                <span>COMMUNICATION</span>
-                <h1>コミュニケーション</h1>
-                <p>会話と情報共有に必要な機能だけを、シンプルにまとめています。</p>
-            </div>
-            <div class="communication-grid">
-                <a href="${pageContext.request.contextPath}/ChatChanelList" target="_blank" rel="noopener"
-                    ><span class="communication-icon"><i class="fa-solid fa-comment-dots"></i></span>
-                    <div>
-                        <small>REALTIME CHAT</small>
-                        <h2>チャット</h2>
-                        <p>ユーザーやグループとの会話を開始・継続します。</p>
-                        <strong>チャットを開く <i class="fa-solid fa-arrow-right"></i></strong></div
-                ></a>
-                <a href="${pageContext.request.contextPath}/ThreadController" target="_blank" rel="noopener"
-                    ><span class="communication-icon"><i class="fa-solid fa-users-rectangle"></i></span>
-                    <div>
-                        <small>DISCUSSION</small>
-                        <h2>スレッド</h2>
-                        <p>テーマごとに情報を整理し、メンバーと共有します。</p>
-                        <strong>スレッドを開く <i class="fa-solid fa-arrow-right"></i></strong></div
-                ></a>
-            </div>
-            <div class="communication-footer">
-                <a href="${pageContext.request.contextPath}/MenuSelect"
-                    ><i class="fa-solid fa-arrow-left"></i> 利用メニュー選択へ戻る</a
-                >
-                <form action="${pageContext.request.contextPath}/Logout" method="get"><button>ログアウト</button></form>
-            </div>
-        </main>
+        <nw-communication-menu
+            data-context-path="${pageContext.request.contextPath}"
+            data-last-name="<c:out value='${sessionScope.loginUser.lastName}' />"
+            data-first-name="<c:out value='${sessionScope.loginUser.firstName}' />"
+        ></nw-communication-menu>
+        <script type="module" src="${pageContext.request.contextPath}/js/angular/main.js"></script>
+        <noscript>メニューを利用するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

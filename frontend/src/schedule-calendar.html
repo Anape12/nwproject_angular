@@ -1,0 +1,136 @@
+<main class="schedule-page">
+    <section class="calendar-panel">
+        <div class="calendar-toolbar">
+            <a class="nav-button" [href]="previousUrl" aria-label="前月">‹</a>
+            <a class="today-button" [href]="action">今日</a>
+            <a class="nav-button" [href]="nextUrl" aria-label="翌月">›</a>
+            <h1>{{ data.year }}年 {{ data.month }}月</h1>
+            <a class="today-button" [href]="contextPath + '/CalendarExchange'">iCalendar出力</a>
+            <form method="post" enctype="multipart/form-data" [action]="contextPath + '/CalendarExchange'">
+                <input type="file" name="calendarFile" accept=".ics,text/calendar" required />
+                <button class="today-button" type="submit">取込</button>
+            </form>
+        </div>
+        @if (data.flash) {
+            <div [class]="'flash ' + (data.flashType ?? '')" role="status">{{ data.flash }}</div>
+        }
+        <div class="calendar-grid weekday-row">
+            <div class="sunday">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div>
+            <div class="saturday">土</div>
+        </div>
+        <div class="calendar-grid month-grid">
+            @for (day of days; track day.date) {
+                <div class="calendar-day" [class.outside]="!day.currentMonth" [class.today]="day.today">
+                    <a class="day-number" [href]="currentUrl + '&date=' + day.date">{{ day.number }}</a>
+                    <div class="day-events">
+                        @for (item of day.events; track $index) {
+                            <a class="event-chip" [style.--event-color]="item.color"
+                                [href]="currentUrl + '&edit=' + item.id">
+                                <span class="event-time">{{ item.time }}</span><span>{{ item.title }}</span>
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+
+    <aside class="event-panel">
+        <h2>{{ event ? "予定を編集" : "予定を追加" }}</h2>
+        @if (event && data.eventParticipant === "true") {
+            <form method="post" [action]="contextPath + '/ScheduleResponse'">
+                <input type="hidden" name="eventId" [value]="event.id" />
+                <button type="submit" name="status" value="ACCEPTED">参加する</button>
+                <button type="submit" name="status" value="DECLINED">辞退する</button>
+            </form>
+        }
+        <form method="post" [action]="action" id="event-form">
+            <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
+            <input type="hidden" name="year" [value]="data.year ?? ''" />
+            <input type="hidden" name="month" [value]="data.month ?? ''" />
+            <input type="hidden" name="action" [value]="event ? 'update' : 'create'" />
+            @if (event) {
+                <input type="hidden" name="eventId" [value]="event.id" />
+            }
+            <label>タイトル <span class="required">必須</span>
+                <input type="text" name="title" maxlength="100" required [value]="event?.title ?? ''" />
+            </label>
+            <label class="all-day-row">
+                <input #dayToggle type="checkbox" id="allDay" name="allDay" value="true" [checked]="allDay()"
+                    (change)="allDay.set(dayToggle.checked)" />
+                終日
+            </label>
+            <div class="date-row">
+                <label>開始日<input type="date" name="startDate" required [value]="event?.startDate ?? data.selectedDate ?? ''" /></label>
+                <label>終了日<input type="date" name="endDate" required [value]="event?.endDate ?? data.selectedDate ?? ''" /></label>
+            </div>
+            <div class="date-row time-fields" [class.disabled]="allDay()">
+                <label>開始時刻<input type="time" name="startTime" [required]="!allDay()" [value]="event?.startTime ?? '09:00'" /></label>
+                <label>終了時刻<input type="time" name="endTime" [required]="!allDay()" [value]="event?.endTime ?? '10:00'" /></label>
+            </div>
+            <label>色
+                <select name="color">
+                    @for (color of colors; track color.id) {
+                        <option [value]="color.id" [selected]="(event?.color ?? '#1a73e8') === color.id">{{ color.label }}</option>
+                    }
+                </select>
+            </label>
+            <label>公開範囲
+                <select name="visibility">
+                    <option value="PRIVATE">自分のみ</option>
+                    <option value="SHARED" [selected]="event?.visibility === 'SHARED'">全員に共有</option>
+                </select>
+            </label>
+            <div class="date-row">
+                <label>繰り返し
+                    <select name="recurrence">
+                        <option value="">なし</option>
+                        <option value="DAILY" [selected]="event?.recurrence === 'DAILY'">毎日</option>
+                        <option value="WEEKLY" [selected]="event?.recurrence === 'WEEKLY'">毎週</option>
+                        <option value="MONTHLY" [selected]="event?.recurrence === 'MONTHLY'">毎月</option>
+                    </select>
+                </label>
+                <label>繰り返し終了日<input type="date" name="recurrenceUntil" [value]="event?.recurrenceUntil ?? ''" /></label>
+            </div>
+            <label>詳細<textarea name="description" maxlength="1000" rows="5" [value]="event?.description ?? ''"></textarea></label>
+            <label>参加者（複数選択可）
+                <select name="participantIds" multiple size="5">
+                    @for (user of users; track user.id) {
+                        <option [value]="user.id">{{ user.name }}</option>
+                    }
+                </select>
+            </label>
+            <div class="form-actions">
+                <button class="primary-button" type="submit">{{ event ? "更新" : "登録" }}</button>
+                @if (event) {
+                    <a class="cancel-button" [href]="currentUrl">キャンセル</a>
+                }
+            </div>
+        </form>
+        @if (event) {
+            <div class="attachments">
+                <h3>関連資料</h3>
+                @for (file of attachments; track file.id) {
+                    <a [href]="contextPath + '/Attachment?id=' + file.id">{{ file.name }}</a>
+                }
+                @if (data.eventOwner === "true") {
+                    <form method="post" enctype="multipart/form-data" [action]="contextPath + '/Attachment'">
+                        <input type="hidden" name="csrfToken" [value]="data.attachmentCsrf ?? ''" />
+                        <input type="hidden" name="ownerType" value="SCHEDULE" />
+                        <input type="hidden" name="ownerId" [value]="event.id" />
+                        <input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.txt,.csv,.zip,.docx,.xlsx,.pptx" required />
+                        <button type="submit">添付</button>
+                    </form>
+                }
+            </div>
+            <form method="post" [action]="action" (submit)="confirmDelete($event)">
+                <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
+                <input type="hidden" name="year" [value]="data.year ?? ''" />
+                <input type="hidden" name="month" [value]="data.month ?? ''" />
+                <input type="hidden" name="action" value="delete" />
+                <input type="hidden" name="eventId" [value]="event.id" />
+                <button class="delete-button" type="submit">予定を削除</button>
+            </form>
+        }
+    </aside>
+</main>

@@ -1,12 +1,17 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!DOCTYPE html>
-<html>
+<html lang="ja">
     <head>
         <meta charset="UTF-8" />
-        <title>どこつぶ</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>ログアウト</title>
     </head>
     <body>
-        <p>ログアウトしました</p>
-        <a href="/docoTsubu/">トップへ</a>
+        <nw-result
+            data-kind="logout"
+            data-context-path="${pageContext.request.contextPath}"
+        ></nw-result>
+        <script type="module" src="${pageContext.request.contextPath}/js/angular/main.js"></script>
+        <noscript>結果を表示するには JavaScript を有効にしてください。</noscript>
     </body>
 </html>

@@ -25,6 +25,7 @@ import jp.nw.entity.AttendanceEntity;
 import jp.nw.entity.UserEntity;
 import jp.nw.domain.user.PermissionAction;
 import jp.nw.util.PermissionCheckUtil;
+import jp.nw.util.PageJson;
 import jp.nw.model.AttendanceDay;
 import jp.nw.model.AttendanceLogic;
 import jp.nw.model.WorkReportLogic;
@@ -59,22 +60,49 @@ public class WorkManagement extends HttpServlet {
             token = UUID.randomUUID().toString();
             session.setAttribute("attendanceCsrfToken", token);
         }
-        request.setAttribute("attendanceDays", days);
+        PageJson.set(request, "attendanceDaysJson", days.stream().map(DayRow::from).toList());
         request.setAttribute("canCloseAttendance", PermissionCheckUtil.can(user, PermissionAction.ATTENDANCE_CLOSE));
-        request.setAttribute("attendanceSummary", logic.summary(user.getUserId(), month));
+        PageJson.set(request, "attendanceSummaryJson", logic.summary(user.getUserId(), month));
         request.setAttribute("monthClosed", logic.isClosed(user.getUserId(), month));
         request.setAttribute("displayMonth", month);
         request.setAttribute("previousMonth", month.minusMonths(1));
         request.setAttribute("nextMonth", month.plusMonths(1));
-        request.setAttribute("selected", selected);
+        if (selected != null) {
+            PageJson.set(request, "selectedJson", AttendanceRow.from(selected));
+        }
         request.setAttribute("selectedDate", selectedDate);
-        request.setAttribute("reports", new WorkReportLogic().findOwn(user.getUserId()));
+        PageJson.set(request, "reportsJson", new WorkReportLogic().findOwn(user.getUserId()).stream()
+                .map(report -> new ReportOption(Long.toString(report.getReportId()), report.getReportDateValue(),
+                        report.getTitle(), report.getStatusLabel())).toList());
         request.setAttribute("csrfToken", token);
         request.setAttribute("flashMessage", session.getAttribute("attendanceFlash"));
         request.setAttribute("flashType", session.getAttribute("attendanceFlashType"));
         session.removeAttribute("attendanceFlash");
         session.removeAttribute("attendanceFlashType");
         request.getRequestDispatcher("/WEB-INF/jsp/WorkManagement/workmanegiment.jsp").forward(request, response);
+    }
+
+    private record DayRow(String date, int number, String weekday, boolean today, boolean weekend,
+            AttendanceRow attendance) {
+        static DayRow from(AttendanceDay day) {
+            return new DayRow(day.getDateValue(), day.getDay(), day.getWeekday(), day.isToday(), day.isWeekend(),
+                    day.getAttendance() == null ? null : AttendanceRow.from(day.getAttendance()));
+        }
+    }
+
+    private record AttendanceRow(String id, String date, String workType, String workTypeLabel, String attendanceType,
+            String clockIn, String clockOut, int breakMinutes, String workingTime, String reportId, String reportTitle,
+            String approvalStatus, String approvalStatusLabel, boolean editable, String note) {
+        static AttendanceRow from(AttendanceEntity item) {
+            return new AttendanceRow(Long.toString(item.getAttendanceId()), item.getWorkDate().toString(),
+                    item.getWorkType(), item.getWorkTypeLabel(), item.getAttendanceType(),
+                    item.getClockInValue(), item.getClockOutValue(), item.getBreakMinutes(), item.getWorkingTimeLabel(),
+                    Objects.toString(item.getReportId(), ""), item.getReportTitle(), item.getApprovalStatus(),
+                    item.getApprovalStatusLabel(), item.isEditable(), item.getNote());
+        }
+    }
+
+    private record ReportOption(String id, String date, String title, String statusLabel) {
     }
 
     @Override

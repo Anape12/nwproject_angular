@@ -1,45 +1,20 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %> <% %>
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!DOCTYPE html>
-<html>
+<html lang="ja">
     <head>
         <meta charset="UTF-8" />
-        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style11.css" />
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-        <script>
-            jQuery(window).on("load", function () {
-                jQuery("#loader-bg").hide();
-            });
-        </script>
-        <title>SampleMenu</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style11.css?v=20261010-1" />
+        <title>${loginFailed ? 'ログインできませんでした | NW Project' : 'ログイン | NW Project'}</title>
     </head>
-    <body>
-        <div class="login-title">
-            <h1>NW Project</h1>
-            <p>Management System</p>
-        </div>
-
-        <div class="login-card">
-            <c:if test="${not empty errorMessage}">
-                <p class="login-error"><c:out value="${errorMessage}" /></p>
-            </c:if>
-            <form action="${pageContext.request.contextPath}/Login" method="post">
-                <div class="form-group">
-                    <label>ユーザーID</label>
-                    <input type="text" id="userId" name="userId" autocomplete="username" />
-                </div>
-
-                <div class="form-group">
-                    <label>パスワード</label>
-                    <input type="password" id="password" name="password" autocomplete="current-password" />
-                </div>
-
-                <input class="login-btn" id="loginBtn" type="submit" value="ログイン" onclick="return checkForm();" />
-            </form>
-        </div>
-        <script type="text/javascript" src="${pageContext.request.contextPath}/js/Login.js"></script>
+    <body class="${loginFailed ? 'auth-result-page' : ''}">
+        <nw-login
+            data-login-url="${pageContext.request.contextPath}/Login"
+            data-failed="${loginFailed}"
+            data-error-message="<c:out value='${errorMessage}' />"
+        ></nw-login>
+        <noscript>ログインするには JavaScript を有効にしてください。</noscript>
+        <script type="module" src="${pageContext.request.contextPath}/js/angular/main.js"></script>
     </body>
-    <div style="position: absolute; bottom: 0; padding-left: 570px" class="fotter">
-        <jsp:include page="footer.jsp" flush="true" />
-    </div>
 </html>

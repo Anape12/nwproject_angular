@@ -9,11 +9,11 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import jp.nw.application.ChatChanelListCommand;
 import jp.nw.base.CommandData;
 import jp.nw.entity.ChatRoomEntity;
+import jp.nw.util.PageJson;
 
 /**
  * Servlet implementation class UserView
@@ -32,13 +32,18 @@ public class ChatChanelListController extends HttpServlet {
 		CommandData output = command.execute();
 
 		List<ChatRoomEntity> targetChatRoom = (List<ChatRoomEntity>) output.getValue("chatchanels");
-		HttpSession session = request.getSession();
-		session.setAttribute("chatRooms", targetChatRoom);
+		PageJson.set(request, "roomsJson", targetChatRoom == null ? List.of() : targetChatRoom.stream()
+				.map(room -> new RoomRow(room.getRoomId(), room.getDisplayName(), "1".equals(room.getRoomType()),
+						room.getAiMemberCount() != null && room.getAiMemberCount() > 0))
+				.toList());
 
 		RequestDispatcher dispatcher = request.getRequestDispatcher(
 				"/WEB-INF/jsp/chat/ChatList.jsp");
 
 		dispatcher.forward(request, response);
 
+	}
+
+	private record RoomRow(String roomId, String displayName, boolean direct, boolean hasAi) {
 	}
 }

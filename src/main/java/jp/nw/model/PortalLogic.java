@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -113,8 +114,13 @@ public class PortalLogic {
                 ResultSetMetaData m = r.getMetaData();
                 while (r.next()) {
                     Map<String, Object> row = new LinkedHashMap<>();
-                    for (int i = 1; i <= m.getColumnCount(); i++)
-                        row.put(m.getColumnLabel(i), r.getObject(i));
+                    for (int i = 1; i <= m.getColumnCount(); i++) {
+                        Object value = r.getObject(i);
+                        if (value instanceof TemporalAccessor || value instanceof java.util.Date) {
+                            value = value.toString();
+                        }
+                        row.put(m.getColumnLabel(i), value);
+                    }
                     list.add(row);
                 }
                 return list;

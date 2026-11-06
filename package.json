@@ -4,6 +4,7 @@
     "description": "",
     "main": "index.js",
     "scripts": {
+        "build:frontend": "ng build",
         "format": "npm run format:jsp && prettier --write \"src/main/webapp/**/*.{js,css}\" \"docs/**/*.md\" \"*.{json,md,yml,yaml}\"",
         "format:jsp": "node scripts/format-jsp.js",
         "format:check": "node scripts/format-jsp.js --check && prettier --check \"src/main/webapp/**/*.{js,css}\" \"docs/**/*.md\" \"*.{json,md,yml,yaml}\"",
@@ -22,9 +23,18 @@
     },
     "homepage": "https://github.com/Anape12/nwproject_docker#readme",
     "devDependencies": {
+        "@angular/build": "^21.2.29",
+        "@angular/cli": "^21.2.29",
+        "@angular/common": "^21.2.26",
+        "@angular/compiler": "^21.2.26",
+        "@angular/compiler-cli": "^21.2.26",
+        "@angular/core": "^21.2.26",
+        "@angular/platform-browser": "^21.2.26",
         "@playwright/test": "^1.60.0",
         "@types/node": "^25.9.8",
         "prettier": "^2.8.8",
-        "prettier-plugin-jsp": "^1.0.13"
+        "prettier-plugin-jsp": "^1.0.13",
+        "rxjs": "~7.8.0",
+        "typescript": "~5.9.3"
     }
 }
