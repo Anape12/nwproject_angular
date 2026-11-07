@@ -23,6 +23,7 @@ import jp.nw.domain.user.PermissionAction;
 import jp.nw.model.ApprovalLogic;
 import jp.nw.util.PermissionCheckUtil;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/ReportApproval")
 public class ReportApprovalController extends HttpServlet {
@@ -33,27 +34,32 @@ public class ReportApprovalController extends HttpServlet {
             s.sendError(403);
             return;
         }
+        if (!"json".equals(q.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), s, "reports/report-approval");
+            return;
+        }
         ApprovalLogic l = new ApprovalLogic();
         String token = (String) session.getAttribute("approvalCsrfToken");
         if (token == null) {
             token = UUID.randomUUID().toString();
             session.setAttribute("approvalCsrfToken", token);
         }
-        PageJson.set(q, "applicationsJson", l.findAll().stream().map(ApplicationRow::from).toList());
-        q.setAttribute("canConfigureApprovals", PermissionCheckUtil.can(u, PermissionAction.APPROVAL_CONFIGURE));
+        List<ApplicationRow> applications = l.findAll().stream().map(ApplicationRow::from).toList();
+        boolean canConfigure = PermissionCheckUtil.can(u, PermissionAction.APPROVAL_CONFIGURE);
         ApprovalRequestEntity selected = selected(q.getParameter("id"), l);
-        if (selected != null) {
-            PageJson.set(q, "selectedJson", new ApplicationDetail(ApplicationRow.from(selected),
-                    selected.getDetail(), selected.getReviewComment(), selected.getReviewerName(),
-                    selected.getReviewedAtLabel(), l.history(selected.getApprovalId()).stream()
-                            .map(HistoryRow::from).toList()));
-        }
-        q.setAttribute("csrfToken", token);
-        q.setAttribute("flashMessage", session.getAttribute("approvalFlash"));
-        q.setAttribute("flashType", session.getAttribute("approvalFlashType"));
+        ApplicationDetail detail = selected == null ? null : new ApplicationDetail(ApplicationRow.from(selected),
+                selected.getDetail(), selected.getReviewComment(), selected.getReviewerName(),
+                selected.getReviewedAtLabel(), l.history(selected.getApprovalId()).stream()
+                        .map(HistoryRow::from).toList());
+        String flash = Objects.toString(session.getAttribute("approvalFlash"), "");
+        String flashType = Objects.toString(session.getAttribute("approvalFlashType"), "");
         session.removeAttribute("approvalFlash");
         session.removeAttribute("approvalFlashType");
-        q.getRequestDispatcher("/WEB-INF/jsp/report/reportApproval.jsp").forward(q, s);
+        PageJson.write(s, new ApprovalPage(token, flash, flashType, canConfigure, applications, detail));
+    }
+
+    private record ApprovalPage(String csrfToken, String flash, String flashType, boolean canConfigure,
+            List<ApplicationRow> applications, ApplicationDetail selected) {
     }
 
     protected void doPost(HttpServletRequest q, HttpServletResponse s) throws IOException {

@@ -1,0 +1,31 @@
+<main>
+    <div class="chat-list-heading">
+        <h1>チャット</h1>
+        <a class="chat-start-btn" [href]="contextPath + '/ChatRoomCreate'">＋ 個別チャットを作成</a>
+    </div>
+    <div class="channel-list">
+        @if (list.failed()) {
+            <p role="alert">チャット一覧を読み込めませんでした。</p>
+        } @else if (!list.rows()) {
+            <p role="status">チャット一覧を読み込んでいます。</p>
+        }
+        @for (room of list.rows(); track room.roomId) {
+            <a class="channel-item" [href]="roomUrl(room)">
+                <div class="channel-icon">{{ room.direct ? (room.hasAi ? "AI" : "👤") : "👥" }}</div>
+                <div class="channel-info">
+                    <div class="channel-name">
+                        {{ room.displayName }}
+                        @if (room.hasAi) {
+                            <span class="ai-user-badge">AI</span>
+                        }
+                    </div>
+                    <div class="channel-type">{{ room.direct ? "個別チャット" : "グループチャット" }}</div>
+                </div>
+            </a>
+        } @empty {
+            @if (list.rows()) {
+                <p class="chat-empty">参加中のチャットはありません。</p>
+            }
+        }
+    </div>
+</main>

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import javax.servlet.ServletException;
@@ -17,6 +18,8 @@ import jp.nw.model.CodedException;
 import jp.nw.model.ErrorCode;
 import jp.nw.model.ErrorMessageLogic;
 import jp.nw.security.BirthdayRuntime;
+import jp.nw.util.AngularPage;
+import jp.nw.util.PageJson;
 
 @WebServlet("/UserBirthday")
 public final class UserBirthdayController extends HttpServlet {
@@ -28,6 +31,10 @@ public final class UserBirthdayController extends HttpServlet {
         UserEntity actor = actor(q);
         if (actor == null) {
             s.sendError(403);
+            return;
+        }
+        if (!"json".equals(q.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), s, "users/user-birthday");
             return;
         }
         String target = target(q, actor);
@@ -43,10 +50,8 @@ public final class UserBirthdayController extends HttpServlet {
                 token = UUID.randomUUID().toString();
                 q.getSession(false).setAttribute("birthdayCsrf", token);
             }
-            q.setAttribute("csrfToken", token);
-            q.setAttribute("targetUserId", target);
-            q.setAttribute("birthday", date.map(LocalDate::toString).orElse(""));
-            q.getRequestDispatcher("/WEB-INF/jsp/security/userBirthday.jsp").forward(q, s);
+            PageJson.write(s, Map.of("csrfToken", token, "targetUserId", target,
+                "birthday", date.map(LocalDate::toString).orElse("")));
         } catch (CodedException.Denied e) {
             s.sendError(403);
         } catch (CodedException.Validation e) {

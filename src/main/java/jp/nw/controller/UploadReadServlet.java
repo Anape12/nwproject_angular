@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -42,8 +41,7 @@ public class UploadReadServlet extends HttpServlet {
 		HttpSession session = request.getSession();
 		session.invalidate();
 
-		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/login.jsp");
-		dispatcher.forward(request, response);
+		response.sendRedirect(request.getContextPath() + "/Login");
 	}
 
 	/**

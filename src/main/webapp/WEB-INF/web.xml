@@ -25,11 +25,4 @@
         <dispatcher>REQUEST</dispatcher>
         <dispatcher>ASYNC</dispatcher>
     </filter-mapping>
-
-    <jsp-config>
-        <jsp-property-group>
-            <url-pattern>*.jsp</url-pattern>
-            <include-coda>/WEB-INF/jsp/common/loginContext.jspf</include-coda>
-        </jsp-property-group>
-    </jsp-config>
 </web-app>

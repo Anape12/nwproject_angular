@@ -5,6 +5,8 @@ import jp.nw.model.CodedException;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
@@ -23,6 +25,7 @@ import jp.nw.model.UserInsertLogic;
 import jp.nw.util.PermissionCheckUtil;
 import jp.nw.util.PermissionGetUtil;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/UserInsert")
 public class UserInsert extends HttpServlet {
@@ -39,16 +42,25 @@ public class UserInsert extends HttpServlet {
             response.sendError(HttpServletResponse.SC_FORBIDDEN, jp.nw.model.ErrorMessageLogic.get(jp.nw.model.ErrorCode.APP_127));
             return;
         }
+        if (!"json".equals(request.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), response, "users/user-registration");
+            return;
+        }
 
         String csrfToken = (String) session.getAttribute("userInsertCsrfToken");
         if (csrfToken == null) {
             csrfToken = UUID.randomUUID().toString();
             session.setAttribute("userInsertCsrfToken", csrfToken);
         }
-        request.setAttribute("csrfToken", csrfToken);
-        request.setAttribute("successMessage", session.getAttribute("userInsertSuccess"));
+        UserEntity actor = (UserEntity) session.getAttribute("loginUser");
+        List<PermissionOption> permissions = PermissionGetUtil.getAllPermissionLevels().stream()
+                .filter(level -> PermissionCheckUtil.canManageRole(actor, level.getPermissionId()))
+                .map(level -> new PermissionOption(level.getPermissionId(), level.getPermissionName())).toList();
+        LocalDate today = LocalDate.now();
+        String success = Objects.toString(session.getAttribute("userInsertSuccess"), "");
         session.removeAttribute("userInsertSuccess");
-        render(request, response, session);
+        PageJson.write(response, Map.of("csrfToken", csrfToken, "permissions", permissions, "success", success,
+                "currentDate", today.toString(), "expiration", today.plusDays(90).toString()));
     }
 
     @Override
@@ -81,30 +93,24 @@ public class UserInsert extends HttpServlet {
             AuditLogLogic.record(request, "USER", "USER_CREATED", "USER", user.getUserId(), true,
                     "権限=" + user.getPermission());
             session.setAttribute("userInsertSuccess", user.getUserId() + " を登録しました。");
-            response.sendRedirect(request.getContextPath() + "/UserInsert");
         } catch (CodedException.Failure e) {
             response.sendError(503, jp.nw.model.ErrorMessageLogic.forDisplay(e));
+            return;
         } catch (IllegalArgumentException | DateTimeParseException e) {
             AuditLogLogic.record(request, "USER", "USER_CREATE_FAILED", "USER",
                     trim(request.getParameter("userId")), false, e.getMessage());
-            request.setAttribute("errorMessage", jp.nw.model.ErrorMessageLogic.forDisplay(e));
-            setEnteredValues(request);
-            request.setAttribute("csrfToken", session.getAttribute("userInsertCsrfToken"));
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            render(request, response, session);
+            String message = jp.nw.model.ErrorMessageLogic.forDisplay(e);
+            if ("json".equals(request.getParameter("format"))) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                PageJson.write(response, Map.of("message", message));
+            } else {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, message);
+            }
+            return;
         }
-    }
-
-    private void render(HttpServletRequest request, HttpServletResponse response, HttpSession session)
-            throws ServletException, IOException {
-        UserEntity actor = (UserEntity) session.getAttribute("loginUser");
-        PageJson.set(request, "permissionLevelsJson", PermissionGetUtil.getAllPermissionLevels().stream()
-                .filter(level -> PermissionCheckUtil.canManageRole(actor, level.getPermissionId()))
-                .map(level -> new PermissionOption(level.getPermissionId(), level.getPermissionName())).toList());
-        LocalDate today = LocalDate.now();
-        request.setAttribute("defaultExpiration", today.plusDays(90));
-        request.setAttribute("currentDate", today);
-        request.getRequestDispatcher("/WEB-INF/jsp/RegUser/userInsert.jsp").forward(request, response);
+        String destination = request.getContextPath() + "/UserInsert";
+        if ("json".equals(request.getParameter("format"))) PageJson.write(response, Map.of("destination", destination));
+        else response.sendRedirect(destination);
     }
 
     private record PermissionOption(String id, String label) {
@@ -135,15 +141,6 @@ public class UserInsert extends HttpServlet {
 
         return UserEntity.builder().userId(userId).lastName(lastName).firstName(firstName)
                 .birthDate(birthday.toString()).permission(permission).password(password).build();
-    }
-
-    private void setEnteredValues(HttpServletRequest request) {
-        request.setAttribute("enteredUserId", trim(request.getParameter("userId")));
-        request.setAttribute("enteredLastName", trim(request.getParameter("lastName")));
-        request.setAttribute("enteredFirstName", trim(request.getParameter("firstName")));
-        request.setAttribute("enteredBirthday", request.getParameter("birthday"));
-        request.setAttribute("enteredPermission", request.getParameter("permission"));
-        request.setAttribute("enteredExpiration", request.getParameter("passwordExpiration"));
     }
 
     private boolean isAdministrator(HttpSession session) {

@@ -59,7 +59,7 @@ public class LoginController extends HttpServlet {
 			return;
 		}
 		response.setContentType("text/html;charset=UTF-8");
-		try (var page = getServletContext().getResourceAsStream("/WEB-INF/angular/login.html")) {
+		try (var page = getServletContext().getResourceAsStream("/WEB-INF/angular/auth/login.html")) {
 			if (page == null) {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
 				return;

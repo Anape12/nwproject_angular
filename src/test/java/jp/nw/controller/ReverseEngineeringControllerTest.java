@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -17,13 +19,13 @@ import jp.nw.entity.UserEntity;
 class ReverseEngineeringControllerTest {
     @Test
     void systemAdministratorCanOpenPage() throws Exception {
-        AtomicInteger forwards = new AtomicInteger();
-        HttpServletRequest request = request("0", null, forwards);
+        AtomicInteger reads = new AtomicInteger();
+        HttpServletRequest request = request("0", null, reads);
         AtomicInteger errors = new AtomicInteger();
 
         new ReverseEngineeringController().doGet(request, response(errors));
 
-        assertEquals(1, forwards.get());
+        assertEquals(1, reads.get());
         assertEquals(0, errors.get());
     }
 
@@ -33,22 +35,26 @@ class ReverseEngineeringControllerTest {
         for (String permission : new String[] { "1", "2" }) {
             for (String view : new String[] { null, "database", "java" }) {
                 AtomicInteger errors = new AtomicInteger();
-                AtomicInteger forwards = new AtomicInteger();
-                controller.doGet(request(permission, view, forwards), response(errors));
+                AtomicInteger reads = new AtomicInteger();
+                controller.doGet(request(permission, view, reads), response(errors));
                 assertEquals(HttpServletResponse.SC_FORBIDDEN, errors.get());
-                assertEquals(0, forwards.get());
+                assertEquals(0, reads.get());
             }
         }
     }
 
-    private HttpServletRequest request(String permission, String view, AtomicInteger forwards) {
+    private HttpServletRequest request(String permission, String view, AtomicInteger reads) {
         UserEntity user = UserEntity.builder().permission(permission).build();
         HttpSession session = (HttpSession) Proxy.newProxyInstance(getClass().getClassLoader(),
                 new Class<?>[] { HttpSession.class }, (proxy, method, arguments) ->
                         "getAttribute".equals(method.getName()) ? user : null);
-        RequestDispatcher dispatcher = (RequestDispatcher) Proxy.newProxyInstance(getClass().getClassLoader(),
-                new Class<?>[] { RequestDispatcher.class }, (proxy, method, arguments) -> {
-                    if ("forward".equals(method.getName())) forwards.incrementAndGet();
+        ServletContext context = (ServletContext) Proxy.newProxyInstance(getClass().getClassLoader(),
+                new Class<?>[] { ServletContext.class }, (proxy, method, arguments) -> {
+                    if ("getResourceAsStream".equals(method.getName())) {
+                        assertEquals("/WEB-INF/angular/admin/reverse-engineering.html", arguments[0]);
+                        reads.incrementAndGet();
+                        return java.io.InputStream.nullInputStream();
+                    }
                     return null;
                 });
         return (HttpServletRequest) Proxy.newProxyInstance(getClass().getClassLoader(),
@@ -56,7 +62,7 @@ class ReverseEngineeringControllerTest {
                     return switch (method.getName()) {
                         case "getSession" -> session;
                         case "getParameter" -> view;
-                        case "getRequestDispatcher" -> dispatcher;
+                        case "getServletContext" -> context;
                         default -> null;
                     };
                 });
@@ -66,6 +72,13 @@ class ReverseEngineeringControllerTest {
         return (HttpServletResponse) Proxy.newProxyInstance(getClass().getClassLoader(),
                 new Class<?>[] { HttpServletResponse.class }, (proxy, method, arguments) -> {
                     if ("sendError".equals(method.getName())) errors.set((Integer) arguments[0]);
+                    if ("getOutputStream".equals(method.getName())) {
+                        return new ServletOutputStream() {
+                            @Override public boolean isReady() { return true; }
+                            @Override public void setWriteListener(WriteListener listener) { }
+                            @Override public void write(int value) { }
+                        };
+                    }
                     return null;
                 });
     }

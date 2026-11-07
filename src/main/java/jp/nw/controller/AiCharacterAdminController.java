@@ -1,6 +1,7 @@
 package jp.nw.controller;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -18,6 +19,7 @@ import jp.nw.domain.user.PermissionAction;
 import jp.nw.model.AiCharacterLogic;
 import jp.nw.util.PermissionCheckUtil;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/AiCharacterAdmin")
 public class AiCharacterAdminController extends HttpServlet {
@@ -29,26 +31,36 @@ public class AiCharacterAdminController extends HttpServlet {
             s.sendError(403);
             return;
         }
+        if (!"json".equals(q.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), s, "admin/ai-character-admin");
+            return;
+        }
         HttpSession session = q.getSession();
         if (session.getAttribute("aiAdminCsrf") == null)
             session.setAttribute("aiAdminCsrf", UUID.randomUUID().toString());
         AiCharacterLogic l = new AiCharacterLogic();
-        PageJson.set(q, "charactersJson", l.findAll().stream().map(CharacterRow::from).toList());
-        PageJson.set(q, "recentJobsJson", l.findRecentJobs().stream().map(JobRow::from).toList());
+        List<CharacterRow> characters = l.findAll().stream().map(CharacterRow::from).toList();
+        List<JobRow> jobs = l.findRecentJobs().stream().map(JobRow::from).toList();
+        CharacterRow selected = null;
         String edit = q.getParameter("edit");
         if (edit != null)
             try {
-                AiCharacterEntity selected = l.find(Long.parseLong(edit));
-                if (selected != null) {
-                    PageJson.set(q, "selectedJson", CharacterRow.from(selected));
+                AiCharacterEntity character = l.find(Long.parseLong(edit));
+                if (character != null) {
+                    selected = CharacterRow.from(character);
                 }
             } catch (NumberFormatException ignored) {
             }
-        q.setAttribute("flash", session.getAttribute("aiAdminFlash"));
-        q.setAttribute("flashType", session.getAttribute("aiAdminFlashType"));
+        String flash = Objects.toString(session.getAttribute("aiAdminFlash"), "");
+        String flashType = Objects.toString(session.getAttribute("aiAdminFlashType"), "");
         session.removeAttribute("aiAdminFlash");
         session.removeAttribute("aiAdminFlashType");
-        q.getRequestDispatcher("/WEB-INF/jsp/ai/characterAdmin.jsp").forward(q, s);
+        PageJson.write(s, new AdminPage((String) session.getAttribute("aiAdminCsrf"), flash, flashType,
+                characters, selected, jobs));
+    }
+
+    private record AdminPage(String csrfToken, String flash, String flashType, List<CharacterRow> characters,
+            CharacterRow selected, List<JobRow> jobs) {
     }
 
     protected void doPost(HttpServletRequest q, HttpServletResponse s) throws IOException {

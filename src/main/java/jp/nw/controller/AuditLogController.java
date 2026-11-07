@@ -16,6 +16,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.domain.user.PermissionAction;
 import jp.nw.model.AuditLogLogic;
 import jp.nw.util.PermissionCheckUtil;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/AuditLog")
 public class AuditLogController extends HttpServlet {
@@ -28,7 +29,7 @@ public class AuditLogController extends HttpServlet {
             return;
         }
         if (!"json".equals(q.getParameter("format"))) {
-            q.getRequestDispatcher("/WEB-INF/jsp/security/auditLog.jsp").forward(q, s);
+            AngularPage.serve(getServletContext(), s, "admin/audit-log");
             return;
         }
 

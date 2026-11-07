@@ -18,6 +18,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.domain.user.PermissionAction;
 import jp.nw.model.PortalLogic;
 import jp.nw.util.PermissionCheckUtil;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/Portal")
 public class PortalController extends HttpServlet {
@@ -29,19 +30,20 @@ public class PortalController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         HttpSession session = req.getSession();
         if (!"json".equals(req.getParameter("format"))) {
-            req.setAttribute("portalError", session.getAttribute("portalError"));
-            session.removeAttribute("portalError");
-            req.getRequestDispatcher("/WEB-INF/jsp/portal/dashboard.jsp").forward(req, res);
+            AngularPage.serve(getServletContext(), res, "navigation/portal");
             return;
         }
 
         UserEntity u = (UserEntity) session.getAttribute("loginUser");
         PortalLogic l = new PortalLogic();
+        var dashboard = l.dashboard(u.getUserId(), PermissionCheckUtil.can(u, PermissionAction.ADMIN_DASHBOARD_VIEW));
+        var results = l.search(u.getUserId(), req.getParameter("q"));
+        Object error = session.getAttribute("portalError");
+        session.removeAttribute("portalError");
         res.setContentType("application/json");
         res.setCharacterEncoding("UTF-8");
         JSON.writeValue(res.getWriter(), Map.of(
-                "dashboard", l.dashboard(u.getUserId(), PermissionCheckUtil.can(u, PermissionAction.ADMIN_DASHBOARD_VIEW)),
-                "searchResults", l.search(u.getUserId(), req.getParameter("q"))));
+                "dashboard", dashboard, "searchResults", results, "portalError", error == null ? "" : error));
     }
 
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws IOException {

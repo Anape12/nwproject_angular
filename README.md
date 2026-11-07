@@ -25,6 +25,8 @@ After Flyway and Tomcat start successfully, open the [login page](http://localho
 
 ## Apply changes
 
+Edit Angular components and their templates in `frontend/src/<feature>` and page entry HTML in `frontend/pages/<feature>`. Maven packages the entry pages under `WEB-INF/angular/<feature>` in the WAR.
+
 ```bash
 ./mvnw package
 docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml restart tomcat
@@ -52,13 +54,7 @@ Install the project dependencies before running the formatter for the first time
 npm install
 ```
 
-Format the JSP files supported by the current JSP formatter configuration:
-
-```bash
-npm run format:jsp
-```
-
-Format all supported JSP, JavaScript, CSS, Markdown, JSON, and YAML files:
+Format all supported JavaScript, CSS, Markdown, JSON, and YAML files:
 
 ```bash
 npm run format
@@ -73,10 +69,8 @@ npm run format:check
 Format a specific file:
 
 ```bash
-npx prettier --write "src/main/webapp/WEB-INF/jsp/security/auditLog.jsp"
+npx prettier --write "src/main/webapp/js/login-context.js"
 ```
-
-JSP files are formatted with `prettier-plugin-jsp`. Legacy JSP files that use syntax unsupported by the plugin are listed in `.prettierignore` and should be migrated before enabling automatic formatting for them.
 
 # Start Flyway
 
@@ -90,11 +84,11 @@ Use the [database migration procedure](docs/database-migrations.md); do not remo
 
 # Tech Stack
 
--   Application: Angular 21, TypeScript, Java 21, Servlet 4.0, and JSP/JSTL. Maven packages the WAR for Apache Tomcat 9.
+-   Application: Angular 21, TypeScript, Java 21, and Servlet 4.0. Maven packages the WAR for Apache Tomcat 9.
 -   Application libraries: MySQL Connector/J, Jackson, Lombok, and Spring Security's BCrypt password encoder.
 -   Database: MySQL 8.0 with Flyway 11 SQL migrations.
 -   Local runtime: Docker Compose with Nginx as the reverse proxy and TLS termination.
 -   Optional AI integration: the separate My-AiCreate service, connected to Ollama through its API.
 -   Optional article reader: the separate Qiita Guide (AI_Support) application, containerized with Node.js 22.
--   Quality checks: JUnit 5, Playwright for browser E2E tests, and Prettier with `prettier-plugin-jsp` for formatting.
+-   Quality checks: JUnit 5, Playwright for browser E2E tests, and Prettier for formatting.
 -   Automation and deployment: GitHub Actions for CI; Google Compute Engine is configured as an optional deployment target (not required for local development).

@@ -2,7 +2,6 @@ package jp.nw.controller;
 
 import java.io.IOException;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
@@ -13,6 +12,7 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.Part;
 
 import jp.nw.fileUpload.FileUploadLogic;
+import jp.nw.util.AngularPage;
 
 /**
  * Servlet implementation class Login
@@ -43,8 +43,7 @@ public class UploadServlet extends HttpServlet {
 		HttpSession session = request.getSession();
 		session.invalidate();
 
-		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/login.jsp");
-		dispatcher.forward(request, response);
+		response.sendRedirect(request.getContextPath() + "/Login");
 	}
 
 	/**
@@ -65,8 +64,7 @@ public class UploadServlet extends HttpServlet {
 
 		HttpSession session = request.getSession();
 		session.setAttribute("UPLOADFILE", session);
-		RequestDispatcher dispatcher = request.getRequestDispatcher("WEB-INF/jsp/appLogic/upload.jsp");
-		dispatcher.forward(request, response);
+		AngularPage.serve(getServletContext(), response, "integrations/external-app-read");
 	}
 
 	private void uloadFileRead(HttpServletRequest request) throws IOException, ServletException {

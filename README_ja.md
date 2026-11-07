@@ -44,6 +44,8 @@ JDK 21 と Docker Desktop（Linux コンテナ）を用意し、このリポジ�
 
 ## 変更を反映する
 
+Angular コンポーネントとそのテンプレートは `frontend/src/<機能>`、画面起動用 HTML は `frontend/pages/<機能>` で編集します。Maven は画面起動用 HTML を WAR 内の `WEB-INF/angular/<機能>` に配置します。
+
 Tomcat は `target/app` を参照します。Angular または Java を変更したら、ビルドして Tomcat を再起動します。
 
 ```powershell
@@ -75,13 +77,7 @@ DB を削除せずに未適用の SQL を反映する手順は [DB マイグレ�
 npm install
 ```
 
-現在 Prettier に対応している JSP を整形します。
-
-```bash
-npm run format:jsp
-```
-
-対応している JSP、JavaScript、CSS、Markdown、JSON、YAML を一括整形します。
+対応している JavaScript、CSS、Markdown、JSON、YAML を一括整形します。
 
 ```bash
 npm run format
@@ -96,14 +92,8 @@ npm run format:check
 任意のファイルだけを整形する場合は、次のように実行します。
 
 ```bash
-npx prettier --write "src/main/webapp/WEB-INF/jsp/security/auditLog.jsp"
+npx prettier --write "src/main/webapp/js/login-context.js"
 ```
-
-JSP の整形には`prettier-plugin-jsp`を使用します。プラグインが解析できない旧形式の JSP は`.prettierignore`で除外しているため、構文を移行してから自動整形の対象へ追加してください。
-
-# Prettier の適用
-
--   npm run format:jsp
 
 # Flyway 実行
 
@@ -149,11 +139,11 @@ QIITA_GUIDE_URL=https://reader.example.com/
 
 # 技術スタック
 
--   アプリケーション：Angular 21、TypeScript、Java 21、Servlet 4.0、JSP／JSTL。Maven で WAR をビルドし、Apache Tomcat 9 で実行。
+-   アプリケーション：Angular 21、TypeScript、Java 21、Servlet 4.0。Maven で WAR をビルドし、Apache Tomcat 9 で実行。
 -   主なライブラリ：MySQL Connector/J、Jackson、Lombok、Spring Security の BCrypt パスワードエンコーダー。
 -   データベース：MySQL 8.0、Flyway 11 による SQL マイグレーション。
 -   ローカル実行環境：Docker Compose、Nginx によるリバースプロキシと TLS 終端。
 -   任意の AI 連携：別プロジェクトの My-AiCreate と、その API 経由で利用する Ollama。
 -   任意の記事読み上げ連携：Node.js 22 でコンテナ化した別プロジェクトの Qiita Guide（AI_Support）。
--   テスト・整形：JUnit 5、Playwright による E2E テスト、Prettier と`prettier-plugin-jsp`。
+-   テスト・整形：JUnit 5、Playwright による E2E テスト、Prettier。
 -   CI・デプロイ：GitHub Actions。Google Compute Engine は任意のデプロイ先として定義（ローカル開発には不要）。

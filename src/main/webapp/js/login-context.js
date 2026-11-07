@@ -79,7 +79,7 @@
                 options.headers = headers;
             }
             return originalFetch.call(this, input, options).then(function (response) {
-                if (response.status === 409) staleWindow();
+                if (response.status === 409 && response.headers.get("X-NW-Window-Invalid") === "1") staleWindow();
                 return response;
             });
         };
@@ -94,7 +94,7 @@
     XMLHttpRequest.prototype.send = function () {
         if (this.__nwSameApplication) this.setRequestHeader(headerName, windowContext);
         this.addEventListener("load", function () {
-            if (this.status === 409) staleWindow();
+            if (this.status === 409 && this.getResponseHeader("X-NW-Window-Invalid") === "1") staleWindow();
         });
         return originalSend.apply(this, arguments);
     };

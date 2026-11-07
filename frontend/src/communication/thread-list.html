@@ -1,0 +1,22 @@
+<main id="container">
+    <h1 class="page-title">スレッド一覧</h1>
+    <a class="new-thread-link" [href]="contextPath + '/ThreadCreate'"> ＋ 新規スレッド </a>
+    @if (list.failed()) {
+        <p role="alert">スレッド一覧を読み込めませんでした。</p>
+    } @else if (!list.rows()) {
+        <p role="status">スレッド一覧を読み込んでいます。</p>
+    }
+    @for (thread of list.rows(); track thread.threadId) {
+        <article class="thread-card">
+            <div class="thread-header">
+                <h2>{{ thread.title }}</h2>
+                <span [class]="'thread-status ' + (thread.status ?? '')">{{ thread.closed ? "完了" : "進行中" }}</span>
+            </div>
+            <div class="thread-content">{{ thread.content }}</div>
+            <div class="thread-footer">
+                <span class="thread-author">投稿者：{{ thread.authorId }}</span>
+                <a [href]="contextPath + '/ThreadDetailController?id=' + thread.threadId">詳細を見る →</a>
+            </div>
+        </article>
+    }
+</main>

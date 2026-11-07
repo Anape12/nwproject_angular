@@ -3,7 +3,6 @@ package jp.nw.controller;
 import java.io.IOException;
 import java.util.List;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -20,6 +19,7 @@ import jp.nw.model.AttachmentOwnerType;
 import jp.nw.model.ChatRoomPermissionPolicy;
 import jp.nw.util.DateFormatUtil;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 
 /**
  * Servlet implementation class UserView
@@ -46,6 +46,10 @@ public class ChatChanelRoomController extends HttpServlet {
 			response.sendError(HttpServletResponse.SC_NOT_FOUND);
 			return;
 		}
+		if (!"json".equals(request.getParameter("format"))) {
+			AngularPage.serve(getServletContext(), response, "communication/chat-room");
+			return;
+		}
 
 		ChatRoomOpenCommand command = new ChatRoomOpenCommand();
 		request.setAttribute("targetRoomId", roomId);
@@ -54,30 +58,28 @@ public class ChatChanelRoomController extends HttpServlet {
 		CommandData output = command.execute();
 
 		HttpSession session = request.getSession();
-		if (output.getValue("chatDetail") instanceof List<?> messages) {
-			PageJson.set(request, "messagesJson", messages.stream().map(ChatMessageEntity.class::cast)
+		List<MessageRow> messageRows = output.getValue("chatDetail") instanceof List<?> messages
+				? messages.stream().map(ChatMessageEntity.class::cast)
 					.map(message -> new MessageRow(message.getMessageId(), message.getPostedById(),
 							message.getPostedByName(), message.getPostedByAccountType(), message.getMessage(),
 							DateFormatUtil.format(message.getCreatedAt())))
-					.toList());
-		}
+					.toList() : List.of();
 		String displayName = request.getParameter("displayName");
 		if (displayName == null || displayName.isBlank()) {
 			displayName = session.getAttribute(LAST_ROOM) instanceof LastRoom last && roomId.equals(last.id())
 					? last.name() : "チャット";
 		}
-		request.setAttribute("RoomName", displayName);
-		request.setAttribute("RoomId", roomId);
-		session.setAttribute(LAST_ROOM, new LastRoom(roomId, displayName));
-		PageJson.set(request, "attachmentsJson", new jp.nw.model.AttachmentLogic().find("CHAT", roomId).stream()
+		List<AttachmentRow> attachments = new jp.nw.model.AttachmentLogic().find("CHAT", roomId).stream()
 				.map(file -> new AttachmentRow(file.get("attachment_id").toString(), (String) file.get("original_name")))
-				.toList());
-		request.setAttribute("canManageMembers", new ChatRoomPermissionPolicy().canManageMembers(loginUser, roomId));
+				.toList();
+		boolean canManage = new ChatRoomPermissionPolicy().canManageMembers(loginUser, roomId);
+		session.setAttribute(LAST_ROOM, new LastRoom(roomId, displayName));
+		PageJson.write(response, new RoomPage(roomId, displayName, loginUser.getUserId(), canManage,
+				(String) session.getAttribute("attachmentCsrfToken"), messageRows, attachments));
+	}
 
-		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/jsp/chat/ChatWindow.jsp");
-
-		dispatcher.forward(request, response);
-
+	private record RoomPage(String roomId, String roomName, String userId, boolean canManage, String csrfToken,
+			List<MessageRow> messages, List<AttachmentRow> attachments) {
 	}
 
 	private record MessageRow(int messageId, String postedById, String postedByName, String postedByAccountType,

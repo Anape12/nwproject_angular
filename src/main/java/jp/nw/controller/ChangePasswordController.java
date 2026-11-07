@@ -8,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.ServletException;
@@ -21,18 +23,30 @@ import jp.nw.entity.UserEntity;
 import jp.nw.model.AuditLogLogic;
 import jp.nw.parts.DBBase;
 import jp.nw.parts.PasswordUtil;
+import jp.nw.util.AngularPage;
+import jp.nw.util.PageJson;
 
 @WebServlet("/ChangePassword")
 public class ChangePasswordController extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+        if (!"json".equals(req.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), res, "auth/change-password");
+            return;
+        }
         HttpSession s = req.getSession();
         String token = (String) s.getAttribute("passwordCsrfToken");
         if (token == null) {
             token = UUID.randomUUID().toString();
             s.setAttribute("passwordCsrfToken", token);
         }
-        req.setAttribute("csrfToken", token);
-        req.getRequestDispatcher("/WEB-INF/jsp/security/changePassword.jsp").forward(req, res);
+        UserEntity user = (UserEntity) s.getAttribute("loginUser");
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("contextPath", req.getContextPath());
+        data.put("firstName", user.getFirstName());
+        data.put("lastName", user.getLastName());
+        data.put("loginContext", s.getAttribute("loginContext"));
+        data.put("csrfToken", token);
+        PageJson.write(res, data);
     }
 
     protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
@@ -45,6 +59,7 @@ public class ChangePasswordController extends HttpServlet {
         }
         String current = req.getParameter("currentPassword"), next = req.getParameter("newPassword"),
                 confirm = req.getParameter("confirmation");
+        boolean json = "json".equals(req.getParameter("format"));
         try {
             validate(next, confirm);
             DBBase db = new DBBase();
@@ -80,12 +95,19 @@ public class ChangePasswordController extends HttpServlet {
             }
             s.setAttribute("forcePasswordChange", false);
             s.setAttribute("passwordChangedMessage", "パスワードを変更しました。");
-            res.sendRedirect(req.getContextPath() + "/MenuSelect");
         } catch (Exception e) {
-            req.setAttribute("errorMessage", jp.nw.model.ErrorMessageLogic.forDisplay(e));
-            req.setAttribute("csrfToken", s.getAttribute("passwordCsrfToken"));
-            req.getRequestDispatcher("/WEB-INF/jsp/security/changePassword.jsp").forward(req, res);
+            String message = jp.nw.model.ErrorMessageLogic.forDisplay(e);
+            if (json) {
+                res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                PageJson.write(res, Map.of("message", message));
+            } else {
+                res.sendError(HttpServletResponse.SC_BAD_REQUEST, message);
+            }
+            return;
         }
+        String destination = req.getContextPath() + "/MenuSelect";
+        if (json) PageJson.write(res, Map.of("destination", destination));
+        else res.sendRedirect(destination);
     }
 
     private void validate(String p, String c) {

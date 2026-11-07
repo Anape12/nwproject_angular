@@ -1,6 +1,9 @@
 package jp.nw.controller;
 
 import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
 
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
@@ -9,6 +12,10 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import jp.nw.entity.UserEntity;
+import jp.nw.util.AngularPage;
+import jp.nw.util.PageJson;
 
 /**
  * Servlet implementation class UserUpdate
@@ -29,6 +36,18 @@ public class SelectApp extends HttpServlet {
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response ) throws ServletException, IOException {
+		if ("json".equals(request.getParameter("format"))) {
+			HttpSession session = request.getSession(false);
+			UserEntity user = (UserEntity) session.getAttribute("loginUser");
+			Map<String, Object> data = new LinkedHashMap<>();
+			data.put("contextPath", request.getContextPath());
+			data.put("loginContext", session.getAttribute("loginContext"));
+			data.put("firstName", user.getFirstName());
+			data.put("lastName", user.getLastName());
+			data.put("appName", session.getAttribute("resultApp"));
+			PageJson.write(response, data);
+			return;
+		}
 
 		RequestDispatcher dispatcher =
 				request.getRequestDispatcher("/html/userupd.html");
@@ -39,28 +58,16 @@ public class SelectApp extends HttpServlet {
 	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
 	 */
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
 		request.setCharacterEncoding("UTF-8");
-		// 実行アプリケーション取得
-		String appLogic = request.getQueryString();
-		String[] params = appLogic.split("=");
-		String result = "";
-
-		if(params[1].equals("NC30001")) {
-//			NC30001 nc30001 = new NC30001();
-//			result = nc30001.initialize();
-			result = "NC3 Apploci";
-		} else if (params[1].equals("NC40001")) {
-//			NC40001 nc40001 = new NC40001();
-//			result = nc40001.initialize();
-			result = "NC4 Applogic";
-		}
+		String result = switch (Objects.toString(request.getParameter("AppName"), "")) {
+			case "NC30001" -> "NC3 Apploci";
+			case "NC40001" -> "NC4 Applogic";
+			default -> "";
+		};
 		HttpSession session = request.getSession();
 		session.setAttribute("resultApp", result);
 
-		RequestDispatcher dispatcher =
-				request.getRequestDispatcher("/WEB-INF/jsp/appLogic/app.jsp");
-		dispatcher.forward(request, response);
+		AngularPage.serve(getServletContext(), response, "integrations/external-app");
 
 	}
 

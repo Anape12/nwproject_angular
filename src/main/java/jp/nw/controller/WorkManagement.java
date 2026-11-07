@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,6 +27,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.domain.user.PermissionAction;
 import jp.nw.util.PermissionCheckUtil;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 import jp.nw.model.AttendanceDay;
 import jp.nw.model.AttendanceLogic;
 import jp.nw.model.WorkReportLogic;
@@ -40,6 +42,10 @@ public class WorkManagement extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if (!"json".equals(request.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), response, "attendance/attendance");
+            return;
+        }
         HttpSession session = request.getSession();
         UserEntity user = (UserEntity) session.getAttribute("loginUser");
         YearMonth month = month(request);
@@ -60,26 +66,33 @@ public class WorkManagement extends HttpServlet {
             token = UUID.randomUUID().toString();
             session.setAttribute("attendanceCsrfToken", token);
         }
-        PageJson.set(request, "attendanceDaysJson", days.stream().map(DayRow::from).toList());
-        request.setAttribute("canCloseAttendance", PermissionCheckUtil.can(user, PermissionAction.ATTENDANCE_CLOSE));
-        PageJson.set(request, "attendanceSummaryJson", logic.summary(user.getUserId(), month));
-        request.setAttribute("monthClosed", logic.isClosed(user.getUserId(), month));
-        request.setAttribute("displayMonth", month);
-        request.setAttribute("previousMonth", month.minusMonths(1));
-        request.setAttribute("nextMonth", month.plusMonths(1));
+        YearMonth previous = month.minusMonths(1);
+        YearMonth next = month.plusMonths(1);
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("year", month.getYear());
+        data.put("month", month.getMonthValue());
+        data.put("previousYear", previous.getYear());
+        data.put("previousMonth", previous.getMonthValue());
+        data.put("nextYear", next.getYear());
+        data.put("nextMonth", next.getMonthValue());
+        data.put("selectedDate", selectedDate.toString());
+        data.put("days", days.stream().map(DayRow::from).toList());
+        data.put("canClose", PermissionCheckUtil.can(user, PermissionAction.ATTENDANCE_CLOSE));
+        data.put("summary", logic.summary(user.getUserId(), month));
+        data.put("closed", logic.isClosed(user.getUserId(), month));
+        data.put("monthKey", month.toString());
         if (selected != null) {
-            PageJson.set(request, "selectedJson", AttendanceRow.from(selected));
+            data.put("selected", AttendanceRow.from(selected));
         }
-        request.setAttribute("selectedDate", selectedDate);
-        PageJson.set(request, "reportsJson", new WorkReportLogic().findOwn(user.getUserId()).stream()
+        data.put("reports", new WorkReportLogic().findOwn(user.getUserId()).stream()
                 .map(report -> new ReportOption(Long.toString(report.getReportId()), report.getReportDateValue(),
                         report.getTitle(), report.getStatusLabel())).toList());
-        request.setAttribute("csrfToken", token);
-        request.setAttribute("flashMessage", session.getAttribute("attendanceFlash"));
-        request.setAttribute("flashType", session.getAttribute("attendanceFlashType"));
+        data.put("csrfToken", token);
+        data.put("flash", session.getAttribute("attendanceFlash"));
+        data.put("flashType", session.getAttribute("attendanceFlashType"));
         session.removeAttribute("attendanceFlash");
         session.removeAttribute("attendanceFlashType");
-        request.getRequestDispatcher("/WEB-INF/jsp/WorkManagement/workmanegiment.jsp").forward(request, response);
+        PageJson.write(response, data);
     }
 
     private record DayRow(String date, int number, String weekday, boolean today, boolean weekend,

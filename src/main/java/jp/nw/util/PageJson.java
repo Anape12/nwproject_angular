@@ -1,18 +1,20 @@
 package jp.nw.util;
 
-import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import javax.servlet.http.HttpServletResponse;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-/** Serializes view data for a JSP host element. The JSP must escape the attribute. */
+/** Writes view data as a JSON response. */
 public final class PageJson {
     private static final ObjectMapper JSON = new ObjectMapper();
 
     private PageJson() {
     }
 
-    public static void set(HttpServletRequest request, String attribute, Object view) throws JsonProcessingException {
-        request.setAttribute(attribute, JSON.writeValueAsString(view));
+    public static void write(HttpServletResponse response, Object view) throws IOException {
+        response.setContentType("application/json;charset=UTF-8");
+        JSON.writeValue(response.getWriter(), view);
     }
 }

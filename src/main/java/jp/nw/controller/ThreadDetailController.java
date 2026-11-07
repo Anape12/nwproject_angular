@@ -2,9 +2,9 @@ package jp.nw.controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
-import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -19,6 +19,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.domain.user.PermissionAction;
 import jp.nw.util.PermissionCheckUtil;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 import jp.nw.model.AiResponseJobLogic;
 
 @WebServlet("/ThreadDetailController")
@@ -41,6 +42,11 @@ public class ThreadDetailController extends HttpServlet {
                         return;
                 }
 
+                if (!"json".equals(request.getParameter("format"))) {
+                        AngularPage.serve(getServletContext(), response, "communication/thread-detail");
+                        return;
+                }
+
                 ThreadDao dao = new ThreadDao();
 
                 ThreadDto thread = dao.findById(threadId);
@@ -59,25 +65,24 @@ public class ThreadDetailController extends HttpServlet {
                 if (session.getAttribute("threadCsrfToken") == null) {
                         session.setAttribute("threadCsrfToken", UUID.randomUUID().toString());
                 }
-                request.setAttribute("threadFlash", session.getAttribute("threadFlash"));
-                request.setAttribute("threadFlashType", session.getAttribute("threadFlashType"));
-                session.removeAttribute("threadFlash");
-                session.removeAttribute("threadFlashType");
-
-                PageJson.set(request, "threadJson", new ThreadView(thread.getThreadId(), thread.getTitle(),
+                ThreadView view = new ThreadView(thread.getThreadId(), thread.getTitle(),
                                 thread.getAuthorId(), thread.getThreadContent(), thread.getStatus(), thread.isClosed(),
                                 thread.getClosedById(), thread.getClosedAt() == null ? null : thread.getClosedAt().toString(),
                                 canManageThread, commentList.stream().map(comment -> new CommentView(comment.getCommentId(),
                                                 comment.getAuthorId(), comment.getCommentText(),
                                                 comment.getCreatedAt() == null ? null : comment.getCreatedAt().toString(),
                                                 loginUser.getUserId().equals(comment.getAuthorId()),
-                                                "AI".equals(comment.getAuthorAccountType()))).toList()));
-                request.setAttribute("aiResponsePending", AiResponseJobLogic.hasPending("THREAD", String.valueOf(threadId)));
+                                                "AI".equals(comment.getAuthorAccountType()))).toList());
+                boolean pending = AiResponseJobLogic.hasPending("THREAD", String.valueOf(threadId));
+                String flash = Objects.toString(session.getAttribute("threadFlash"), "");
+                String flashType = Objects.toString(session.getAttribute("threadFlashType"), "");
+                session.removeAttribute("threadFlash");
+                session.removeAttribute("threadFlashType");
+                PageJson.write(response, new ThreadPage(view, (String) session.getAttribute("threadCsrfToken"),
+                                flash, flashType, pending));
+        }
 
-                RequestDispatcher dispatcher = request.getRequestDispatcher(
-                                "/WEB-INF/jsp/thread/ThreadDetail.jsp");
-
-                dispatcher.forward(request, response);
+        private record ThreadPage(ThreadView thread, String csrfToken, String flash, String flashType, boolean pending) {
         }
 
         private record ThreadView(int id, String title, String authorId, String content, String status, boolean closed,

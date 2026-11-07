@@ -10,6 +10,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import jp.nw.util.AngularPage;
+
 /** Opens the separately deployed Qiita Guide application from the business menu. */
 @WebServlet("/QiitaGuide")
 public class QiitaGuideController extends HttpServlet {
@@ -29,8 +31,7 @@ public class QiitaGuideController extends HttpServlet {
 
         if (!isValidUrl(url)) {
             response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-            request.getRequestDispatcher("/WEB-INF/jsp/Menu/qiitaGuideUnavailable.jsp")
-                    .forward(request, response);
+            AngularPage.serve(getServletContext(), response, "integrations/qiita-unavailable");
             return;
         }
 

@@ -3,6 +3,7 @@ package jp.nw.controller;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,6 +16,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.model.ChatRoomCreateLogic;
 import jp.nw.model.ChatRoomCreateLogic.CreatedRoom;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/ChatRoomCreate")
 public class ChatRoomCreateController extends HttpServlet {
@@ -24,9 +26,14 @@ public class ChatRoomCreateController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if (!"json".equals(request.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), response, "communication/chat-create");
+            return;
+        }
         UserEntity loginUser = getLoginUser(request);
-        ChatRoomCreateLogic logic = new ChatRoomCreateLogic();
-        render(request, response, logic, loginUser.getUserId());
+        PageJson.write(response, Map.of("rows", new ChatRoomCreateLogic().getAvailableUsers(loginUser.getUserId())
+                .stream().map(user -> new ChatUserRow(user.getUserId(), user.getFirstName(), user.getLastName(),
+                        "AI".equals(user.getAccountType()))).toList()));
     }
 
     @Override
@@ -35,27 +42,25 @@ public class ChatRoomCreateController extends HttpServlet {
         request.setCharacterEncoding("UTF-8");
         UserEntity loginUser = getLoginUser(request);
         ChatRoomCreateLogic logic = new ChatRoomCreateLogic();
+        boolean json = "json".equals(request.getParameter("format"));
 
         try {
             CreatedRoom room = logic.createOrGetDirectRoom(
                     loginUser.getUserId(), request.getParameter("targetUserId"));
             String displayName = URLEncoder.encode(room.displayName(), StandardCharsets.UTF_8);
-            response.sendRedirect(request.getContextPath() + "/ChatChanelRoom?roomId="
-                    + room.roomId() + "&displayName=" + displayName);
+            String destination = request.getContextPath() + "/ChatChanelRoom?roomId="
+                    + URLEncoder.encode(room.roomId(), StandardCharsets.UTF_8) + "&displayName=" + displayName;
+            if (json) PageJson.write(response, Map.of("destination", destination));
+            else response.sendRedirect(destination);
         } catch (IllegalArgumentException e) {
-            request.setAttribute("errorMessage", jp.nw.model.ErrorMessageLogic.forDisplay(e));
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            render(request, response, logic, loginUser.getUserId());
+            String message = jp.nw.model.ErrorMessageLogic.forDisplay(e);
+            if (json) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                PageJson.write(response, Map.of("message", message));
+            } else {
+                response.sendError(HttpServletResponse.SC_BAD_REQUEST, message);
+            }
         }
-    }
-
-    private void render(HttpServletRequest request, HttpServletResponse response, ChatRoomCreateLogic logic,
-            String userId) throws ServletException, IOException {
-        PageJson.set(request, "chatUsersJson", logic.getAvailableUsers(userId).stream()
-                .map(user -> new ChatUserRow(user.getUserId(), user.getFirstName(), user.getLastName(),
-                        "AI".equals(user.getAccountType())))
-                .toList());
-        request.getRequestDispatcher("/WEB-INF/jsp/chat/ChatRoomCreate.jsp").forward(request, response);
     }
 
     private record ChatUserRow(String userId, String firstName, String lastName, boolean ai) {

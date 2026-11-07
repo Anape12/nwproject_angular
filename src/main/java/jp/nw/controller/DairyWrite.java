@@ -5,6 +5,7 @@ import jp.nw.model.CodedException;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ import jp.nw.entity.WorkReportEntity;
 import jp.nw.model.ApprovalLogic;
 import jp.nw.model.WorkReportLogic;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/DairyWrite")
 public class DairyWrite extends HttpServlet {
@@ -28,6 +30,10 @@ public class DairyWrite extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        if (!"json".equals(request.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), response, "reports/report-write");
+            return;
+        }
         HttpSession session = request.getSession();
         UserEntity user = (UserEntity) session.getAttribute("loginUser");
         WorkReportLogic logic = new WorkReportLogic();
@@ -37,14 +43,15 @@ public class DairyWrite extends HttpServlet {
             session.setAttribute("reportCsrfToken", token);
         }
         WorkReportEntity selected = parseReport(request.getParameter("edit"), user.getUserId(), logic);
+        ReportDetail detail = null;
+        List<AttachmentRow> attachments = List.of();
         if (selected != null) {
-            PageJson.set(request, "selectedReportJson", new ReportDetail(ReportRow.from(selected),
+            detail = new ReportDetail(ReportRow.from(selected),
                     selected.isEditable(), selected.getBody(), selected.getReviewComment(),
-                    selected.getReviewerName(), selected.getReviewedAtLabel()));
-            PageJson.set(request, "attachmentsJson",
-                    new jp.nw.model.AttachmentLogic().find("REPORT", String.valueOf(selected.getReportId())).stream()
-                            .map(file -> new AttachmentRow(file.get("attachment_id").toString(),
-                                    (String) file.get("original_name"))).toList());
+                    selected.getReviewerName(), selected.getReviewedAtLabel());
+            attachments = new jp.nw.model.AttachmentLogic().find("REPORT", String.valueOf(selected.getReportId())).stream()
+                    .map(file -> new AttachmentRow(file.get("attachment_id").toString(),
+                            (String) file.get("original_name"))).toList();
         }
         LocalDate initialDate = LocalDate.now();
         try {
@@ -52,14 +59,17 @@ public class DairyWrite extends HttpServlet {
                 initialDate = LocalDate.parse(request.getParameter("date"));
         } catch (Exception ignored) {
         }
-        PageJson.set(request, "reportsJson", logic.findOwn(user.getUserId()).stream().map(ReportRow::from).toList());
-        request.setAttribute("today", initialDate);
-        request.setAttribute("csrfToken", token);
-        request.setAttribute("flashMessage", session.getAttribute("reportFlash"));
-        request.setAttribute("flashType", session.getAttribute("reportFlashType"));
+        List<ReportRow> reports = logic.findOwn(user.getUserId()).stream().map(ReportRow::from).toList();
+        String flash = Objects.toString(session.getAttribute("reportFlash"), "");
+        String flashType = Objects.toString(session.getAttribute("reportFlashType"), "");
         session.removeAttribute("reportFlash");
         session.removeAttribute("reportFlashType");
-        request.getRequestDispatcher("/WEB-INF/jsp/report/reportWrite.jsp").forward(request, response);
+        PageJson.write(response, new ReportPage(token, (String) session.getAttribute("attachmentCsrfToken"),
+                initialDate.toString(), flash, flashType, reports, detail, attachments));
+    }
+
+    private record ReportPage(String csrfToken, String attachmentCsrf, String today, String flash, String flashType,
+            List<ReportRow> reports, ReportDetail selected, List<AttachmentRow> attachments) {
     }
 
     private record ReportRow(String id, String title, String date, String updatedAtLabel, String status,

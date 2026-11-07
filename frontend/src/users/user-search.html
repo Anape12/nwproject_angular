@@ -1,0 +1,44 @@
+<main class="search-form">
+    <h1>ユーザー情報検索</h1>
+    <p>※ユーザー情報未入力の場合、全件検索となるためご注意ください。</p>
+    <form method="post" [action]="searchUrl" name="form1" (submit)="search($event, userId.value)">
+        <input
+            type="text"
+            name="userId"
+            #userId
+            aria-label="ユーザーID"
+            placeholder="ユーザーIDを入力してください"
+        />
+        <button class="search-btn" type="submit" [disabled]="searching()">検索</button>
+    </form>
+
+    @if (results(); as rows) {
+        @if (rows.length) {
+            <table>
+                <thead>
+                    <tr class="tr-back">
+                        <th scope="col">No</th>
+                        <th scope="col">ユーザーID</th>
+                        <th scope="col">権限レベル（1:管理者/2:通常）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (user of rows; track user.id) {
+                        <tr>
+                            <td>{{ user.id }}</td>
+                            <td>{{ user.userId }}</td>
+                            <td>{{ user.permission }}</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        } @else {
+            <p role="status">該当するユーザーはありません。</p>
+        }
+    } @else if (searching()) {
+        <p role="status">ユーザー情報を検索しています。</p>
+    } @else if (searchFailed()) {
+        <p role="alert">ユーザー情報を検索できませんでした。再度お試しください。</p>
+    }
+</main>
+<button class="search-btn2" type="button" name="userInfo" (click)="closeWindow()">ウィンドウを閉じる</button>

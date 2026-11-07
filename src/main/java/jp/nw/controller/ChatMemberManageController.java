@@ -21,6 +21,7 @@ import jp.nw.model.ChatRoomPermissionPolicy;
 import jp.nw.model.ErrorMessageLogic;
 import jp.nw.parts.DBBase;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/ChatMemberManage")
 public class ChatMemberManageController extends HttpServlet {
@@ -33,15 +34,23 @@ public class ChatMemberManageController extends HttpServlet {
             s.sendError(403);
             return;
         }
+        if (!"json".equals(q.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), s, "communication/chat-members");
+            return;
+        }
         HttpSession session = q.getSession();
         if (session.getAttribute("chatMemberCsrf") == null)
             session.setAttribute("chatMemberCsrf", UUID.randomUUID().toString());
-        q.setAttribute("roomId", room);
-        PageJson.set(q, "availableJson", available(room).stream().map(MemberRow::from).toList());
-        PageJson.set(q, "membersJson", members(room).stream().map(MemberRow::from).toList());
-        q.setAttribute("flash", session.getAttribute("chatMemberFlash"));
+        List<MemberRow> availableUsers = available(room).stream().map(MemberRow::from).toList();
+        List<MemberRow> currentMembers = members(room).stream().map(MemberRow::from).toList();
+        String flash = Objects.toString(session.getAttribute("chatMemberFlash"), "");
         session.removeAttribute("chatMemberFlash");
-        q.getRequestDispatcher("/WEB-INF/jsp/chat/ChatMemberManage.jsp").forward(q, s);
+        PageJson.write(s, new MemberPage(room, (String) session.getAttribute("chatMemberCsrf"),
+                flash, currentMembers, availableUsers));
+    }
+
+    private record MemberPage(String roomId, String csrfToken, String flash, List<MemberRow> members,
+            List<MemberRow> available) {
     }
 
     protected void doPost(HttpServletRequest q, HttpServletResponse s) throws IOException {

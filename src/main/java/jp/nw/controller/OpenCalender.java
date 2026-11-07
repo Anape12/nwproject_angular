@@ -10,7 +10,9 @@ import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -27,6 +29,7 @@ import jp.nw.entity.UserEntity;
 import jp.nw.model.ScheduleCalendarDay;
 import jp.nw.model.ScheduleEventLogic;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/OpenCalender")
 public class OpenCalender extends HttpServlet {
@@ -35,6 +38,10 @@ public class OpenCalender extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        if (!"json".equals(request.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), response, "attendance/schedule-calendar");
+            return;
+        }
         HttpSession session = request.getSession();
         UserEntity loginUser = (UserEntity) session.getAttribute("loginUser");
         YearMonth month = parseMonth(request);
@@ -52,28 +59,34 @@ public class OpenCalender extends HttpServlet {
             session.setAttribute("scheduleCsrfToken", csrfToken);
         }
 
-        PageJson.set(request, "daysJson", createDays(month, gridStart, gridEnd, events).stream()
-                .map(DayRow::from).toList());
-        request.setAttribute("displayMonth", month);
-        request.setAttribute("previousMonth", month.minusMonths(1));
-        request.setAttribute("nextMonth", month.plusMonths(1));
-        request.setAttribute("selectedDate", selectedDate);
+        YearMonth previous = month.minusMonths(1);
+        YearMonth next = month.plusMonths(1);
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("year", month.getYear());
+        data.put("month", month.getMonthValue());
+        data.put("previousYear", previous.getYear());
+        data.put("previousMonth", previous.getMonthValue());
+        data.put("nextYear", next.getYear());
+        data.put("nextMonth", next.getMonthValue());
+        data.put("selectedDate", selectedDate.toString());
+        data.put("days", createDays(month, gridStart, gridEnd, events).stream().map(DayRow::from).toList());
         if (editEvent != null) {
-            request.setAttribute("eventOwner", loginUser.getUserId().equals(editEvent.getUserId()));
-            request.setAttribute("eventParticipant", logic.isParticipant(editEvent.getEventId(), loginUser.getUserId()));
-            PageJson.set(request, "editEventJson", EditRow.from(editEvent));
-            PageJson.set(request, "attachmentsJson", new jp.nw.model.AttachmentLogic()
+            data.put("eventOwner", loginUser.getUserId().equals(editEvent.getUserId()));
+            data.put("eventParticipant", logic.isParticipant(editEvent.getEventId(), loginUser.getUserId()));
+            data.put("event", EditRow.from(editEvent));
+            data.put("attachments", new jp.nw.model.AttachmentLogic()
                     .find("SCHEDULE", Long.toString(editEvent.getEventId())).stream()
                     .map(file -> new AttachmentRow(file.get("attachment_id").toString(),
                             (String) file.get("original_name"))).toList());
         }
-        PageJson.set(request, "scheduleUsersJson", logic.users(loginUser.getUserId()));
-        request.setAttribute("flashMessage", session.getAttribute("scheduleFlash"));
-        request.setAttribute("flashType", session.getAttribute("scheduleFlashType"));
-        request.setAttribute("csrfToken", csrfToken);
+        data.put("users", logic.users(loginUser.getUserId()));
+        data.put("csrfToken", csrfToken);
+        data.put("attachmentCsrf", session.getAttribute("attachmentCsrfToken"));
+        data.put("flash", session.getAttribute("scheduleFlash"));
+        data.put("flashType", session.getAttribute("scheduleFlashType"));
         session.removeAttribute("scheduleFlash");
         session.removeAttribute("scheduleFlashType");
-        request.getRequestDispatcher("/WEB-INF/jsp/calender/calender.jsp").forward(request, response);
+        PageJson.write(response, data);
     }
 
     private record DayRow(String date, int number, boolean currentMonth, boolean today, List<EventRow> events) {

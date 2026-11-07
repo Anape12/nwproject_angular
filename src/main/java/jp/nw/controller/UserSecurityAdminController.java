@@ -3,6 +3,7 @@ package jp.nw.controller;
 import jp.nw.model.CodedException;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -20,6 +21,7 @@ import jp.nw.model.AuditLogLogic;
 import jp.nw.model.UserSecurityLogic;
 import jp.nw.util.PermissionCheckUtil;
 import jp.nw.util.PageJson;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/UserSecurityAdmin")
 public class UserSecurityAdminController extends HttpServlet {
@@ -30,21 +32,27 @@ public class UserSecurityAdminController extends HttpServlet {
             s.sendError(403);
             return;
         }
+        if (!"json".equals(q.getParameter("format"))) {
+            AngularPage.serve(getServletContext(), s, "users/user-security");
+            return;
+        }
         String token = (String) session.getAttribute("userSecurityCsrf");
         if (token == null) {
             token = UUID.randomUUID().toString();
             session.setAttribute("userSecurityCsrf", token);
         }
-        q.setAttribute("csrfToken", token);
         boolean canManageSystemUsers = PermissionCheckUtil.hasRole(u, PermissionStatus.SYSTEM_ADMINISTRATOR);
-        q.setAttribute("canManageSystemUsers", canManageSystemUsers);
-        PageJson.set(q, "usersJson", new UserSecurityLogic().findAll().stream()
-                .map(account -> AccountRow.from(account, canManageSystemUsers)).toList());
-        q.setAttribute("flash", session.getAttribute("securityFlash"));
-        q.setAttribute("flashType", session.getAttribute("securityFlashType"));
+        List<AccountRow> users = new UserSecurityLogic().findAll().stream()
+                .map(account -> AccountRow.from(account, canManageSystemUsers)).toList();
+        String flash = Objects.toString(session.getAttribute("securityFlash"), "");
+        String flashType = Objects.toString(session.getAttribute("securityFlashType"), "");
         session.removeAttribute("securityFlash");
         session.removeAttribute("securityFlashType");
-        q.getRequestDispatcher("/WEB-INF/jsp/security/userSecurityAdmin.jsp").forward(q, s);
+        PageJson.write(s, new SecurityPage(token, flash, flashType, canManageSystemUsers, users));
+    }
+
+    private record SecurityPage(String csrfToken, String flash, String flashType, boolean systemAdmin,
+            List<AccountRow> users) {
     }
 
     protected void doPost(HttpServletRequest q, HttpServletResponse s) throws IOException {

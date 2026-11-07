@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -18,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jp.nw.domain.user.PermissionAction;
 import jp.nw.entity.UserEntity;
 import jp.nw.util.PermissionCheckUtil;
+import jp.nw.util.AngularPage;
 
 @WebServlet(urlPatterns = { "/MenuSelect", "/BusinessMenu", "/CommunicationMenu" })
 public class MenuController extends HttpServlet {
@@ -30,45 +33,38 @@ public class MenuController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         response.setHeader("Cache-Control", "no-store");
-        String path = request.getServletPath();
-        if ("/MenuSelect".equals(path) || "/CommunicationMenu".equals(path)) {
-            renderMenu(request, response, "/MenuSelect".equals(path) ? "menu-select" : "communication-menu");
-            return;
-        }
-        UserEntity user = (UserEntity) request.getSession().getAttribute("loginUser");
-        request.setAttribute("searchUserInfo", PermissionCheckUtil.can(user, PermissionAction.SEARCH_USER_INFO));
-        request.setAttribute("canManageUsers", PermissionCheckUtil.can(user, PermissionAction.USER_MANAGE));
-        request.setAttribute("canAudit", PermissionCheckUtil.can(user, PermissionAction.AUDIT_VIEW));
-        request.setAttribute("canManageAi", PermissionCheckUtil.can(user, PermissionAction.AI_CHARACTER_MANAGE));
-        request.setAttribute("canViewDesign", PermissionCheckUtil.can(user, PermissionAction.DESIGN_REVERSE_VIEW));
-        request.setAttribute("canUseExternalTools",
-                PermissionCheckUtil.can(user, PermissionAction.EXTERNAL_TOOLS_VIEW));
-        request.setAttribute("canReviewApprovals", new jp.nw.model.ApprovalLogic().canReview(user));
-        request.setAttribute("todayLabel", LocalDate.now(ZoneId.of("Asia/Tokyo")).format(HOME_DATE));
-        request.getRequestDispatcher("/WEB-INF/jsp/Menu/menuHome.jsp").forward(request, response);
-    }
-
-    private void renderMenu(HttpServletRequest request, HttpServletResponse response, String pageName)
-            throws IOException {
+        String pageName = switch (request.getServletPath()) {
+            case "/MenuSelect" -> "menu-select";
+            case "/CommunicationMenu" -> "communication-menu";
+            default -> "business-menu";
+        };
         if ("json".equals(request.getParameter("format"))) {
             HttpSession session = request.getSession(false);
             UserEntity user = (UserEntity) session.getAttribute("loginUser");
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("contextPath", request.getContextPath());
+            data.put("firstName", user.getFirstName());
+            data.put("lastName", user.getLastName());
+            data.put("loginContext", session.getAttribute("loginContext"));
+            if ("business-menu".equals(pageName)) {
+                addBusinessData(data, user);
+            }
             response.setContentType("application/json;charset=UTF-8");
-            JSON.writeValue(response.getWriter(), new MenuData(request.getContextPath(), user.getFirstName(),
-                    user.getLastName(), (String) session.getAttribute("loginContext")));
+            JSON.writeValue(response.getWriter(), data);
             return;
         }
 
-        try (var page = getServletContext().getResourceAsStream("/WEB-INF/angular/" + pageName + ".html")) {
-            if (page == null) {
-                response.sendError(HttpServletResponse.SC_NOT_FOUND);
-                return;
-            }
-            response.setContentType("text/html;charset=UTF-8");
-            page.transferTo(response.getOutputStream());
-        }
+        AngularPage.serve(getServletContext(), response, "navigation/" + pageName);
     }
 
-    private record MenuData(String contextPath, String firstName, String lastName, String loginContext) {
+    private void addBusinessData(Map<String, Object> data, UserEntity user) {
+        data.put("searchUserInfo", PermissionCheckUtil.can(user, PermissionAction.SEARCH_USER_INFO));
+        data.put("canManageUsers", PermissionCheckUtil.can(user, PermissionAction.USER_MANAGE));
+        data.put("canAudit", PermissionCheckUtil.can(user, PermissionAction.AUDIT_VIEW));
+        data.put("canManageAi", PermissionCheckUtil.can(user, PermissionAction.AI_CHARACTER_MANAGE));
+        data.put("canViewDesign", PermissionCheckUtil.can(user, PermissionAction.DESIGN_REVERSE_VIEW));
+        data.put("canUseExternalTools", PermissionCheckUtil.can(user, PermissionAction.EXTERNAL_TOOLS_VIEW));
+        data.put("canReviewApprovals", new jp.nw.model.ApprovalLogic().canReview(user));
+        data.put("todayLabel", LocalDate.now(ZoneId.of("Asia/Tokyo")).format(HOME_DATE));
     }
 }

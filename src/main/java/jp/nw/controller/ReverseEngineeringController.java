@@ -16,6 +16,7 @@ import jp.nw.domain.user.PermissionAction;
 import jp.nw.entity.UserEntity;
 import jp.nw.model.ReverseEngineeringLogic;
 import jp.nw.util.PermissionCheckUtil;
+import jp.nw.util.AngularPage;
 
 @WebServlet("/ReverseEngineering")
 public class ReverseEngineeringController extends HttpServlet {
@@ -36,7 +37,7 @@ public class ReverseEngineeringController extends HttpServlet {
         response.setHeader("X-Content-Type-Options", "nosniff");
         String view = request.getParameter("view");
         if (view == null) {
-            request.getRequestDispatcher("/WEB-INF/jsp/security/reverseEngineering.jsp").forward(request, response);
+            AngularPage.serve(request.getServletContext(), response, "admin/reverse-engineering");
             return;
         }
         response.setCharacterEncoding("UTF-8");
