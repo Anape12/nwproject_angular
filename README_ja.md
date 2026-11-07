@@ -146,4 +146,4 @@ QIITA_GUIDE_URL=https://reader.example.com/
 -   任意の AI 連携：別プロジェクトの My-AiCreate と、その API 経由で利用する Ollama。
 -   任意の記事読み上げ連携：Node.js 22 でコンテナ化した別プロジェクトの Qiita Guide（AI_Support）。
 -   テスト・整形：JUnit 5、Playwright による E2E テスト、Prettier。
--   CI・デプロイ：GitHub Actions。Google Compute Engine は任意のデプロイ先として定義（ローカル開発には不要）。
+-   CI：GitHub Actions で Angular と Java のビルド、WAR の内容確認、Flyway の適用、ブラウザーテストを実行します。生年月日の暗号化は別のワークフローで検証します。

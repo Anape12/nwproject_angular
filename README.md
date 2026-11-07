@@ -91,4 +91,4 @@ Use the [database migration procedure](docs/database-migrations.md); do not remo
 -   Optional AI integration: the separate My-AiCreate service, connected to Ollama through its API.
 -   Optional article reader: the separate Qiita Guide (AI_Support) application, containerized with Node.js 22.
 -   Quality checks: JUnit 5, Playwright for browser E2E tests, and Prettier for formatting.
--   Automation and deployment: GitHub Actions for CI; Google Compute Engine is configured as an optional deployment target (not required for local development).
+-   CI: GitHub Actions builds the Angular and Java application, checks the WAR contents, applies Flyway migrations, and runs the browser tests. Birthday encryption has a separate integration workflow.

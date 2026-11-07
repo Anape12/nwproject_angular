@@ -1,4 +1,4 @@
-name: Java CI
+name: Angular and Java CI
 
 on:
   push:
@@ -15,6 +15,11 @@ jobs:
     # Fork PRs must not receive or execute code with access to private dependencies.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    env:
+      COMPOSE_FILE: .devcontainer/docker-compose.yml
+      COMPOSE_PROJECT_NAME: nwproject-angular-ci
+      E2E_BASE_URL: http://localhost:8081
+      PLAYWRIGHT_HTML_OPEN: never
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -60,6 +65,9 @@ jobs:
           echo "DB_USER=nwproject_app" >> .env
           echo "DB_PASSWORD=$DB_PASSWORD" >> .env
           echo "MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD" >> .env
+          echo "NW_DB_CONTAINER=nwproject-angular-ci-db" >> .env
+          echo "NW_TOMCAT_CONTAINER=nwproject-angular-ci-tomcat" >> .env
+          echo "NW_HTTP_PORT=8081" >> .env
 
       - name: Prepare encryption library
         env:
@@ -68,6 +76,18 @@ jobs:
 
       - name: Build WAR
         run: mvn --batch-mode --no-transfer-progress clean package
+
+      - name: Verify Angular assets in WAR
+        run: |
+          jar tf target/app.war > target/war-entries.txt
+          grep -Fxq 'js/angular/main.js' target/war-entries.txt
+          find frontend/pages -type f -name '*.html' -printf 'WEB-INF/angular/%P\n' | sort > target/expected-pages.txt
+          grep -E '^WEB-INF/angular/.*\.html$' target/war-entries.txt | sort > target/packaged-pages.txt
+          diff -u target/expected-pages.txt target/packaged-pages.txt
+          if grep -Ei '\.(jsp|jspx|jspf)$' target/war-entries.txt; then
+            echo "::error::The WAR contains retired JSP assets."
+            exit 1
+          fi
 
       - name: Upload WAR
         # A public WAR exposes the private library's bytecode.
@@ -78,21 +98,22 @@ jobs:
           path: target/app.war
 
       - name: Install Playwright
-        run: |
-          npm ci
-          npx playwright install --with-deps chromium
+        run: npx playwright install --with-deps chromium
 
-      - name: Docker Build
-        run: docker compose --env-file .env -f .devcontainer/docker-compose.yml build
+      - name: Build Tomcat image
+        run: docker compose --env-file .env build tomcat
 
-      - name: Start Containers
+      - name: Start database, apply migrations, and start Tomcat
         id: start_containers
-        run: docker compose --env-file .env -f .devcontainer/docker-compose.yml up -d
+        run: |
+          docker compose --env-file .env up -d --wait --wait-timeout 180 db
+          docker compose --env-file .env run --rm flyway
+          docker compose --env-file .env up -d --no-build tomcat
 
       - name: Wait for Tomcat
         run: |
           for i in {1..30}; do
-            if curl -f http://localhost:8080/Login; then
+            if curl --fail --silent --max-time 5 "$E2E_BASE_URL/Login" >/dev/null; then
               echo "Tomcat started"
               exit 0
             fi
@@ -100,7 +121,6 @@ jobs:
             sleep 5
           done
           echo "Tomcat startup timeout"
-          docker compose --env-file .env -f .devcontainer/docker-compose.yml logs
           exit 1
 
       - name: Run Playwright Tests
@@ -121,9 +141,9 @@ jobs:
 
       - name: Show Container Logs
         if: failure() && steps.start_containers.outcome != '' && steps.start_containers.outcome != 'skipped'
-        run: docker compose --env-file .env -f .devcontainer/docker-compose.yml logs
+        run: docker compose --env-file .env logs db tomcat
 
       - name: Shutdown Containers
         # A failed or cancelled startup can still leave partially started containers.
         if: always() && steps.start_containers.outcome != '' && steps.start_containers.outcome != 'skipped'
-        run: docker compose --env-file .env -f .devcontainer/docker-compose.yml down
+        run: docker compose --env-file .env down --volumes

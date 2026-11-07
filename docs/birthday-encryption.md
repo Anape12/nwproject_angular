@@ -31,7 +31,7 @@
 
 `Anape12/jpa-security` は private で運用します。開発端末では、アクセス権のある SSH 鍵または Git Credential Manager 等を使って取得します。トークンを clone URL やスクリプトへ埋め込まず、このチャットへ貼り付ける必要もありません。
 
-CI では `nwproject_docker` の **Settings → Secrets and variables → Actions** に `JPA_SECURITY_READ_TOKEN` を登録します。fine-grained PAT を使う場合、対象を `Anape12/jpa-security` のみに限定し、Repository permissions の **Contents: Read-only** を付与します。書込権限は不要です。有効期限を設けて更新してください。
+CI では `nwproject_angular` の **Settings → Secrets and variables → Actions** に `JPA_SECURITY_READ_TOKEN` を登録します。fine-grained PAT を使う場合、対象を `Anape12/jpa-security` のみに限定し、Repository permissions の **Contents: Read-only** を付与します。書込権限は不要です。有効期限を設けて更新してください。
 
 通常の `GITHUB_TOKEN` は呼び出し元リポジトリ用なので、別の private リポジトリの取得にはこの専用の認証情報が必要です。両ビルドワークフローは、固定したコミットを `actions/checkout` で取得し、`persist-credentials: false` で Git 設定への認証情報の残留を避けます。未設定なら明示的に失敗し、private 依存へアクセスするジョブは外部 fork からの PR では実行しません。
 
