@@ -1,33 +1,46 @@
 import { expect, test } from "@playwright/test";
+import { readFileSync } from "node:fs";
 import path from "node:path";
+import ts from "typescript";
 
 const origin = "http://progress.test";
-const scriptPath = path.resolve("src/main/webapp/js/server-progress.js");
-const stylePath = path.resolve("src/main/webapp/css/server-progress.css");
-type ProgressWindow = Window & { NWProgress: { start(message: string): () => void; stop(): void } };
+const modulePath = "/server-progress.mjs";
+const script = ts.transpileModule(readFileSync("frontend/src/shared/server-progress.ts", "utf8"), {
+    compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext },
+}).outputText;
+const stylePath = path.resolve("frontend/src/shared/server-progress.css");
+const initialize = `<script type="module">
+    import { initializeServerProgress } from "${modulePath}";
+    window.progressFixture = initializeServerProgress();
+</script>`;
+
+declare global {
+    interface Window {
+        progressFixture: ReturnType<typeof import("../frontend/src/shared/server-progress").initializeServerProgress>;
+    }
+}
 
 test.beforeEach(async ({ page, context }) => {
     await context.route(`${origin}/**`, async (route) => {
-        if (new URL(route.request().url()).pathname === "/js/server-progress.js") {
-            await route.fulfill({ path: scriptPath, contentType: "application/javascript" });
+        if (new URL(route.request().url()).pathname === modulePath) {
+            await route.fulfill({ body: script, contentType: "application/javascript" });
             return;
         }
         if (["/search", "/next"].includes(new URL(route.request().url()).pathname)) {
             await new Promise((resolve) => setTimeout(resolve, 900));
             await route.fulfill({
                 contentType: "text/html",
-                body: '<meta charset="utf-8"><h1>移動先</h1><script defer src="/js/server-progress.js"></script>',
+                body: '<meta charset="utf-8"><h1>移動先</h1>' + initialize,
             });
             return;
         }
         await route.fulfill({
             contentType: "text/html",
-            body: '<meta charset="utf-8"><form action="/search" method="get"><button type="submit">検索</button></form><form action="/search" method="get" target="_blank"><button type="submit">別タブ検索</button></form><a href="/next">次の画面</a><a href="/next" target="_blank" rel="noopener">別タブ</a><a href="/QiitaGuide" data-nw-progress-ignore>Qiita記事を聴く</a>',
+            body: '<meta charset="utf-8"><form action="/search" method="get"><button type="submit">検索</button></form><form action="/search" method="get" target="_blank"><button type="submit">別タブ検索</button></form><a href="/next">次の画面</a><a href="/next" target="_blank" rel="noopener">別タブ</a><a href="/QiitaGuide" data-nw-progress-ignore>Qiita記事を聴く</a>' + initialize,
         });
     });
     await page.goto(`${origin}/`);
     await page.addStyleTag({ path: stylePath });
-    await page.addScriptTag({ path: scriptPath });
 });
 
 test("検索の待機中に表示し、画面遷移後は残さない", async ({ page }) => {
@@ -64,7 +77,7 @@ test("送信がキャンセルされた場合は進行表示を消す", async ({
 
 test("画面をマスクし、中央に進行表示を置いて操作を防ぐ", async ({ page }) => {
     await page.getByRole("button", { name: "検索", exact: true }).focus();
-    await page.evaluate(() => (window as ProgressWindow).NWProgress.start("処理中…"));
+    await page.evaluate(() => window.progressFixture.start("処理中…"));
     await expect(page.locator(".nw-progress")).toBeVisible();
     await expect(page.locator("body")).toHaveAttribute("aria-busy", "true");
     const layout = await page.evaluate(() => {
@@ -87,7 +100,7 @@ test("画面をマスクし、中央に進行表示を置いて操作を防ぐ",
     await page.keyboard.press("Enter");
     await page.waitForTimeout(250);
     await expect(page).toHaveURL(`${origin}/`);
-    await page.evaluate(() => (window as ProgressWindow).NWProgress.stop());
+    await page.evaluate(() => window.progressFixture.stop());
     await expect(page.locator(".nw-progress")).toBeHidden();
     await expect(page.locator("body")).not.toHaveAttribute("aria-busy");
     await page.getByRole("button", { name: "検索", exact: true }).click();

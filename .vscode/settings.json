@@ -18,11 +18,11 @@
             "ssh": "Disabled",
             "previewLimit": 50,
             "server": "localhost",
-            "port": 3307,
+            "port": 3308,
             "driver": "MySQL",
-            "name": "NWPROJECT",
-            "username": "root",
+            "name": "NWPROJECT_Angular",
             "database": "nwproject_db",
+            "username": "nwproject_app",
             "password": "root"
         }
     ],

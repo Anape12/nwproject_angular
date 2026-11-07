@@ -1,5 +1,6 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
 import { loadPageData } from "../shared/page-data";
+import { requestWithLoginContext } from "../shared/login-context";
 
 function pageAttributes(): DOMStringMap {
     return inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
@@ -82,7 +83,7 @@ export class ChatCreateComponent {
         this.submitting.set(true);
         this.errorMessage.set("");
         try {
-            const response = await fetch(this.contextPath + "/ChatRoomCreate?format=json", {
+            const response = await requestWithLoginContext(this.contextPath + "/ChatRoomCreate?format=json", {
                 method: "POST",
                 mode: "same-origin",
                 body: new URLSearchParams({ targetUserId }),

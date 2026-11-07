@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
+import { requestWithLoginContext } from "../shared/login-context";
 
 interface SearchRow {
     id: number;
@@ -25,7 +26,7 @@ export class UserSearchComponent {
         this.searchFailed.set(false);
         this.results.set(null);
         try {
-            const response = await fetch(this.searchUrl, {
+            const response = await requestWithLoginContext(this.searchUrl, {
                 method: "POST", mode: "same-origin", body: new URLSearchParams({ userId }),
             });
             if (response.redirected) {

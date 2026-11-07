@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { initializeLoginContext } from "../shared/login-context";
 import { loadPageData } from "../shared/page-data";
 
 interface MenuData {
@@ -27,14 +28,7 @@ export async function prepareStaticPage(host: HTMLElement): Promise<boolean> {
     const header = document.querySelector<HTMLElement>("nw-header");
     if (header) Object.assign(header.dataset, navigation, { loggedIn: "true" });
 
-    Object.assign(window, { NW_SERVER_LOGIN_CONTEXT: loginContext, NW_CONTEXT_PATH: contextPath });
-    await new Promise<void>((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = contextPath + "/js/login-context.js?v=20261107-2";
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error("Login context script failed to load"));
-        document.head.appendChild(script);
-    });
+    initializeLoginContext(loginContext, contextPath);
     if (host.hasAttribute("data-page-json")) {
         const content = await loadPageData<Record<string, unknown>>(
             "", location.pathname, new URLSearchParams(location.search),

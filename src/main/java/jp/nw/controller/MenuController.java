@@ -19,15 +19,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jp.nw.domain.user.PermissionAction;
 import jp.nw.entity.UserEntity;
-import jp.nw.util.PermissionCheckUtil;
 import jp.nw.util.AngularPage;
+import jp.nw.util.PermissionCheckUtil;
 
 @WebServlet(urlPatterns = { "/MenuSelect", "/BusinessMenu", "/CommunicationMenu" })
 public class MenuController extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final DateTimeFormatter HOME_DATE =
-            DateTimeFormatter.ofPattern("yyyy年M月d日（E）", Locale.JAPANESE);
+    private static final DateTimeFormatter HOME_DATE = DateTimeFormatter.ofPattern("yyyy年M月d日（E）", Locale.JAPANESE);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

@@ -1,4 +1,5 @@
 import { Component, computed, ElementRef, inject, OnInit, signal } from "@angular/core";
+import { requestWithLoginContext } from "../shared/login-context";
 
 type View = "database" | "java";
 interface Table {
@@ -95,7 +96,7 @@ export class ReverseEngineeringComponent implements OnInit {
         if (cached) return;
 
         try {
-            const response = await fetch(this.contextPath + "/ReverseEngineering?view=" + view, { mode: "same-origin" });
+            const response = await requestWithLoginContext(this.contextPath + "/ReverseEngineering?view=" + view, { mode: "same-origin" });
             if (requestId !== this.requestId) return;
             if (response.redirected) {
                 location.assign(response.url);

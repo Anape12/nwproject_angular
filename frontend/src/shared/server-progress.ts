@@ -1,25 +1,12 @@
-(function () {
-    "use strict";
-
-    if (window.NWProgress) return;
-
-    const script = document.currentScript || document.querySelector('script[src*="/js/server-progress.js"]');
-    if (script && script.src && !document.querySelector("link[data-nw-progress-style]")) {
-        const style = document.createElement("link");
-        style.rel = "stylesheet";
-        style.href = new URL("../css/server-progress.css?v=20261018-2", script.src).href;
-        style.dataset.nwProgressStyle = "";
-        document.head.appendChild(style);
-    }
-
+export function initializeServerProgress() {
     let currentId = 0;
-    let safetyTimer;
-    let indicator;
+    let safetyTimer: number | undefined;
+    let indicator: HTMLDivElement | undefined;
     let active = false;
-    let previousBusy;
+    let previousBusy: string | null = null;
     const progressParameter = "_nwProgressId";
     const progressChannel = typeof BroadcastChannel === "function" ? new BroadcastChannel("nwproject.progress") : null;
-    const pendingTabs = new Map();
+    const pendingTabs = new Map<string, () => void>();
 
     if (progressChannel) {
         progressChannel.addEventListener("message", function (event) {
@@ -30,12 +17,14 @@
         });
         const incomingId = new URL(location.href).searchParams.get(progressParameter);
         if (incomingId) {
-            window.addEventListener("load", function () {
+            const notifyReady = () => {
                 progressChannel.postMessage({ type: "ready", id: incomingId });
                 const cleanUrl = new URL(location.href);
                 cleanUrl.searchParams.delete(progressParameter);
                 history.replaceState(history.state, "", cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
-            });
+            };
+            if (document.readyState === "complete") notifyReady();
+            else window.addEventListener("load", notifyReady, { once: true });
         }
     }
 
@@ -53,7 +42,7 @@
         return indicator;
     }
 
-    function stop(id) {
+    function stop(id?: number) {
         if (id != null && id !== currentId) return;
         clearTimeout(safetyTimer);
         if (indicator) indicator.hidden = true;
@@ -64,34 +53,35 @@
         active = false;
     }
 
-    function start(message, timeoutMs) {
+    function start(message: string, timeoutMs = 120000) {
         const id = ++currentId;
         stop();
         const element = ensureIndicator();
         if (element) {
             previousBusy = document.body.getAttribute("aria-busy");
             document.body.setAttribute("aria-busy", "true");
-            element.querySelector(".nw-progress-message").textContent = message || "読み込み中…";
+            const label = element.querySelector(".nw-progress-message");
+            if (label) label.textContent = message;
             element.hidden = false;
             active = true;
         }
         // If a navigation is cancelled by the browser, do not leave the indicator stuck forever.
-        safetyTimer = setTimeout(function () {
+        safetyTimer = window.setTimeout(function () {
             stop(id);
-        }, timeoutMs || 120000);
+        }, timeoutMs);
         return function () {
             stop(id);
         };
     }
 
-    function ownTab(target) {
-        const base = document.querySelector("base[target]");
+    function ownTab(target: string) {
+        const base = document.querySelector<HTMLBaseElement>("base[target]");
         const effective = (target || (base && base.target) || "_self").toLowerCase();
         return effective === "_self" || effective === "_top" || effective === "_parent";
     }
 
-    function newTab(target) {
-        const base = document.querySelector("base[target]");
+    function newTab(target: string) {
+        const base = document.querySelector<HTMLBaseElement>("base[target]");
         const effective = (target || (base && base.target) || "_self").toLowerCase();
         return effective === "_blank" || !effective.startsWith("_");
     }
@@ -114,7 +104,7 @@
         return tracking;
     }
 
-    function navigable(urlText) {
+    function navigable(urlText: string | null) {
         if (!urlText || urlText.startsWith("#")) return false;
         try {
             const url = new URL(urlText, location.href);
@@ -128,7 +118,7 @@
         }
     }
 
-    function blockInteraction(event) {
+    function blockInteraction(event: Event) {
         if (!active) return;
         event.preventDefault();
         event.stopImmediatePropagation();
@@ -141,7 +131,7 @@
     document.addEventListener(
         "click",
         function (event) {
-            const link = event.target.closest && event.target.closest("a[href]");
+            const link = event.target instanceof Element ? event.target.closest<HTMLAnchorElement>("a[href]") : null;
             if (
                 !link ||
                 event.button !== 0 ||
@@ -156,23 +146,23 @@
                 return;
             const separateTab = newTab(link.target);
             if (!separateTab && !ownTab(link.target)) return;
-            let done;
-            let tracking;
+            let done: () => void;
+            let restore: (() => void) | undefined;
             if (separateTab && progressChannel) {
                 const originalHref = link.href;
-                tracking = trackNewTab();
+                const tracking = trackNewTab();
                 const url = new URL(originalHref);
                 url.searchParams.set(progressParameter, tracking.id);
                 link.href = url.href;
                 done = tracking.finish;
-                tracking.restore = function () {
+                restore = function () {
                     link.href = originalHref;
                 };
             } else {
                 done = start("画面を読み込んでいます…", separateTab ? 30000 : undefined);
             }
             setTimeout(function () {
-                if (tracking) tracking.restore();
+                restore?.();
                 if (event.defaultPrevented) done();
             }, 0);
         },
@@ -183,15 +173,17 @@
         "submit",
         function (event) {
             const form = event.target;
+            if (!(form instanceof HTMLFormElement)) return;
             const submitter = event.submitter;
             const action = submitter?.getAttribute("formaction") || form.getAttribute("action") || location.href;
             const target = submitter?.getAttribute("formtarget") || form.target;
             const method = submitter?.getAttribute("formmethod") || form.method || "get";
-            if (!(form instanceof HTMLFormElement) || form.dataset.nwProgressIgnore !== undefined || !navigable(action))
+            if (form.dataset.nwProgressIgnore !== undefined || !navigable(action))
                 return;
             const separateTab = newTab(target);
             if (!separateTab && !ownTab(target)) return;
-            const text = (event.submitter?.textContent || event.submitter?.value || "").trim();
+            const value = submitter instanceof HTMLInputElement || submitter instanceof HTMLButtonElement ? submitter.value : "";
+            const text = (submitter?.textContent || value).trim();
             const message =
                 form.dataset.nwProgressMessage ||
                 (/検索|絞り込み/.test(text)
@@ -201,11 +193,10 @@
                     : /登録|保存|更新|申請|承認|削除|送信|作成/.test(text)
                     ? "処理中…"
                     : "読み込み中…");
-            let done;
-            let tracking;
-            let field;
+            let done: () => void;
+            let field: HTMLInputElement | undefined;
             if (separateTab && progressChannel && method.toLowerCase() === "get") {
-                tracking = trackNewTab();
+                const tracking = trackNewTab();
                 field = document.createElement("input");
                 field.type = "hidden";
                 field.name = progressParameter;
@@ -230,5 +221,5 @@
         stop();
     });
 
-    window.NWProgress = { start: start, stop: stop };
-})();
+    return { start, stop };
+}

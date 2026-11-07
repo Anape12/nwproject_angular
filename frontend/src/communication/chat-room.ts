@@ -1,4 +1,5 @@
 import { afterNextRender, Component, DestroyRef, ElementRef, inject, Injector, signal, viewChild } from "@angular/core";
+import { requestWithLoginContext } from "../shared/login-context";
 
 interface ChatMessage {
     messageId: number;
@@ -58,7 +59,7 @@ export class ChatRoomComponent {
         this.sendFailed.set(false);
         const text = input.value;
         try {
-            const response = await fetch(this.contextPath + "/StartChat", {
+            const response = await requestWithLoginContext(this.contextPath + "/StartChat", {
                 method: "POST",
                 mode: "same-origin",
                 body: new URLSearchParams({ commentText: text, roomId: this.roomId }),
@@ -81,7 +82,7 @@ export class ChatRoomComponent {
         const version = this.sendVersion;
         try {
             const query = new URLSearchParams({ roomId: this.roomId });
-            const response = await fetch(this.contextPath + "/ChatMessages?" + query, { mode: "same-origin" });
+            const response = await requestWithLoginContext(this.contextPath + "/ChatMessages?" + query, { mode: "same-origin" });
             if (version !== this.sendVersion) return;
             const messages = await this.readMessages(response);
             if (messages === null || version !== this.sendVersion) return;

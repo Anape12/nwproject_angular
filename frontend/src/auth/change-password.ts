@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
+import { requestWithLoginContext } from "../shared/login-context";
 
 @Component({
     selector: "nw-change-password",
@@ -21,7 +22,7 @@ export class ChangePasswordComponent {
             for (const [key, value] of new FormData(form)) {
                 if (typeof value === "string") body.append(key, value);
             }
-            const response = await fetch(this.contextPath + "/ChangePassword?format=json", {
+            const response = await requestWithLoginContext(this.contextPath + "/ChangePassword?format=json", {
                 method: "POST", mode: "same-origin", body,
             });
             if (response.redirected) {

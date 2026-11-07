@@ -21,6 +21,7 @@ import { LoginComponent } from "./auth/login";
 import { NewThreadComponent } from "./communication/new-thread";
 import { QiitaUnavailableComponent } from "./integrations/qiita-unavailable";
 import { UserBirthdayComponent } from "./users/user-birthday";
+import { initializeServerProgress } from "./shared/server-progress";
 
 const entryPoints = [
     ["nw-login", LoginComponent],
@@ -55,6 +56,7 @@ const entryPoints = [
 async function startPage(): Promise<void> {
     const page = document.querySelector<HTMLElement>("[data-static-page]");
     if (page) {
+        initializeServerProgress();
         try {
             if (!await prepareStaticPage(page)) return;
         } catch {

@@ -69,7 +69,7 @@ npm run format:check
 Format a specific file:
 
 ```bash
-npx prettier --write "src/main/webapp/js/login-context.js"
+npx prettier --write "frontend/src/shared/login-context.ts"
 ```
 
 # Start Flyway

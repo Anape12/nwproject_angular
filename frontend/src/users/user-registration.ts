@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
+import { requestWithLoginContext } from "../shared/login-context";
 
 @Component({
     selector: "nw-user-registration",
@@ -24,7 +25,7 @@ export class UserRegistrationComponent {
             for (const [key, value] of new FormData(form)) {
                 if (typeof value === "string") body.append(key, value);
             }
-            const response = await fetch(this.action + "?format=json", { method: "POST", mode: "same-origin", body });
+            const response = await requestWithLoginContext(this.action + "?format=json", { method: "POST", mode: "same-origin", body });
             if (response.redirected) {
                 location.assign(response.url);
                 return;

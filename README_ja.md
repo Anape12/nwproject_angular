@@ -40,7 +40,9 @@ JDK 21 と Docker Desktop（Linux コンテナ）を用意し、このリポジ�
 
 4. ブラウザーでログイン画面を開きます。[http://localhost:8081/Login](http://localhost:8081/Login)
 
-通常の画面確認には、Tomcat と MySQL を使用します。AI 住人、Qiita Guide、生年月日の暗号化機能には、それぞれの追加設定が必要です。
+ログインやメニューの表示は、上記の Tomcat と MySQL で確認できます。新規ユーザー登録と生年月日の確認・変更には、暗号化用の鍵と対応表 DB が必要です。準備したら、起動時に `-f .devcontainer/docker-compose.birthday.yml` を追加してください。[生年月日の暗号化設定](docs/birthday-encryption.md)
+
+AI 住人と Qiita Guide を使う場合は、それぞれの追加設定が必要です。
 
 ## 変更を反映する
 
@@ -92,7 +94,7 @@ npm run format:check
 任意のファイルだけを整形する場合は、次のように実行します。
 
 ```bash
-npx prettier --write "src/main/webapp/js/login-context.js"
+npx prettier --write "frontend/src/shared/login-context.ts"
 ```
 
 # Flyway 実行
