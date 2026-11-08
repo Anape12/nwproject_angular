@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
-import { requestWithLoginContext } from "../shared/login-context";
+import { projectRequest } from "../infr/project-request";
 
 @Component({
     selector: "nw-change-password",
@@ -7,8 +7,8 @@ import { requestWithLoginContext } from "../shared/login-context";
     host: { style: "display: contents" },
 })
 export class ChangePasswordComponent {
+    readonly project = projectRequest;
     readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly contextPath = this.data["contextPath"] ?? "";
     readonly errorMessage = signal("");
     readonly submitting = signal(false);
 
@@ -22,8 +22,8 @@ export class ChangePasswordComponent {
             for (const [key, value] of new FormData(form)) {
                 if (typeof value === "string") body.append(key, value);
             }
-            const response = await requestWithLoginContext(this.contextPath + "/ChangePassword?format=json", {
-                method: "POST", mode: "same-origin", body,
+            const response = await projectRequest.request("changePassword", { json: true,
+                method: "POST", body,
             });
             if (response.redirected) {
                 location.assign(response.url);

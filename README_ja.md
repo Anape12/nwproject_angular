@@ -40,6 +40,8 @@ JDK 21 と Docker Desktop（Linux コンテナ）を用意し、このリポジ�
 
 4. ブラウザーでログイン画面を開きます。[http://localhost:8081/Login](http://localhost:8081/Login)
 
+Java をデバッグするときは、Tomcat の起動後に VS Code の「実行とデバッグ」で **Attach to Tomcat** を選びます。接続先は `localhost:5006` です。`.env` の `NW_DEBUG_PORT` を変更した場合は、`.vscode/launch.json` の `port` も同じ値にしてください。
+
 ログインやメニューの表示は、上記の Tomcat と MySQL で確認できます。新規ユーザー登録と生年月日の確認・変更には、暗号化用の鍵と対応表 DB が必要です。準備したら、起動時に `-f .devcontainer/docker-compose.birthday.yml` を追加してください。[生年月日の暗号化設定](docs/birthday-encryption.md)
 
 AI 住人と Qiita Guide を使う場合は、それぞれの追加設定が必要です。

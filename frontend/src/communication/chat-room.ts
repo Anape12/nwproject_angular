@@ -1,5 +1,5 @@
 import { afterNextRender, Component, DestroyRef, ElementRef, inject, Injector, signal, viewChild } from "@angular/core";
-import { requestWithLoginContext } from "../shared/login-context";
+import { projectRequest } from "../infr/project-request";
 
 interface ChatMessage {
     messageId: number;
@@ -21,16 +21,16 @@ interface Attachment {
     host: { style: "display: contents" },
 })
 export class ChatRoomComponent {
+    readonly project = projectRequest;
     private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     private readonly injector = inject(Injector);
     private readonly area = viewChild.required<ElementRef<HTMLElement>>("chatArea");
-    readonly contextPath = this.host.dataset["contextPath"] ?? "";
     readonly roomId = this.host.dataset["roomId"] ?? "";
     readonly roomName = this.host.dataset["roomName"] ?? "";
     readonly userId = this.host.dataset["userId"] ?? "";
     readonly csrfToken = this.host.dataset["csrfToken"] ?? "";
     readonly canManage = this.host.dataset["canManage"] === "true";
-    readonly membersUrl = this.contextPath + "/ChatMemberManage?" + new URLSearchParams({ roomId: this.roomId });
+    readonly membersUrl = projectRequest.url("chatMembers", new URLSearchParams({ roomId: this.roomId }));
     readonly attachments: Attachment[] = JSON.parse(this.host.dataset["attachments"] || "[]");
     readonly messages = signal<ChatMessage[]>(JSON.parse(this.host.dataset["messages"] || "[]"));
     readonly sending = signal(false);
@@ -59,9 +59,8 @@ export class ChatRoomComponent {
         this.sendFailed.set(false);
         const text = input.value;
         try {
-            const response = await requestWithLoginContext(this.contextPath + "/StartChat", {
+            const response = await projectRequest.request("chatSend", {
                 method: "POST",
-                mode: "same-origin",
                 body: new URLSearchParams({ commentText: text, roomId: this.roomId }),
             });
             const messages = await this.readMessages(response);
@@ -82,7 +81,7 @@ export class ChatRoomComponent {
         const version = this.sendVersion;
         try {
             const query = new URLSearchParams({ roomId: this.roomId });
-            const response = await requestWithLoginContext(this.contextPath + "/ChatMessages?" + query, { mode: "same-origin" });
+            const response = await projectRequest.request("chatMessages", { query });
             if (version !== this.sendVersion) return;
             const messages = await this.readMessages(response);
             if (messages === null || version !== this.sendVersion) return;

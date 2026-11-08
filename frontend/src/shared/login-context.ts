@@ -1,11 +1,9 @@
 const storageKey = "nwproject.loginContext";
 const parameterName = "_loginContext";
-const headerName = "X-NW-Login-Context";
 
 let windowContext = "";
-let applicationPath = "";
 
-export function initializeLoginContext(serverContext: string, contextPath: string): void {
+export function initializeLoginContext(serverContext: string): void {
     const currentUrl = new URL(location.href);
     const freshLogin = currentUrl.searchParams.get("loginFresh") === "1";
 
@@ -14,7 +12,6 @@ export function initializeLoginContext(serverContext: string, contextPath: strin
     }
 
     windowContext = sessionStorage.getItem(storageKey) || "";
-    applicationPath = contextPath;
     if (!windowContext) return;
 
     if (freshLogin) {
@@ -32,18 +29,8 @@ export function initializeLoginContext(serverContext: string, contextPath: strin
     }).observe(document.documentElement, { childList: true, subtree: true });
 }
 
-export async function requestWithLoginContext(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
-    const requestUrl = input instanceof Request ? input.url : input;
-    if (windowContext && sameOriginUrl(String(requestUrl))) {
-        const headers = new Headers(init?.headers || (input instanceof Request ? input.headers : undefined));
-        headers.set(headerName, windowContext);
-        init = { ...init, headers };
-    }
-    const response = await fetch(input, init);
-    if (windowContext && response.status === 409 && response.headers.get("X-NW-Window-Invalid") === "1") {
-        location.replace(applicationPath + "/Login?windowInvalid=1");
-    }
-    return response;
+export function getLoginContext(): string {
+    return windowContext;
 }
 
 function sameOriginUrl(value: string | null): URL | null {

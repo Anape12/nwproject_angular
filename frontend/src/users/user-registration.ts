@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
-import { requestWithLoginContext } from "../shared/login-context";
+import { projectRequest } from "../infr/project-request";
 
 @Component({
     selector: "nw-user-registration",
@@ -8,7 +8,7 @@ import { requestWithLoginContext } from "../shared/login-context";
 })
 export class UserRegistrationComponent {
     readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly action = (this.data["contextPath"] ?? "") + "/UserInsert";
+    readonly action = projectRequest.url("userRegistration");
     readonly permissions: { id: string; label: string }[] = JSON.parse(this.data["permissions"] || "[]");
     readonly showPassword = signal(false);
     readonly showConfirmation = signal(false);
@@ -25,7 +25,7 @@ export class UserRegistrationComponent {
             for (const [key, value] of new FormData(form)) {
                 if (typeof value === "string") body.append(key, value);
             }
-            const response = await requestWithLoginContext(this.action + "?format=json", { method: "POST", mode: "same-origin", body });
+            const response = await projectRequest.request("userRegistration", { json: true, method: "POST", body });
             if (response.redirected) {
                 location.assign(response.url);
                 return;

@@ -1,4 +1,5 @@
-import { Component, ElementRef, inject } from "@angular/core";
+import { Component } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 @Component({
     selector: "nw-new-thread",
@@ -6,6 +7,5 @@ import { Component, ElementRef, inject } from "@angular/core";
     host: { style: "display: contents" },
 })
 export class NewThreadComponent {
-    private readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly contextPath = this.data["contextPath"] ?? "";
+    readonly project = projectRequest;
 }

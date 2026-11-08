@@ -1,5 +1,5 @@
 <main class="workspace-home">
-    <a class="mode-switch-link" [href]="contextPath + '/MenuSelect'" target="_self"><i class="fa-solid fa-table-cells-large"></i> 利用メニューを切り替える</a>
+    <a class="mode-switch-link" [href]="project.url('menuSelect')" target="_self"><i class="fa-solid fa-table-cells-large"></i> 利用メニューを切り替える</a>
     <section class="welcome-panel">
         <div>
             <p class="home-date">{{ data.todayLabel }}</p>
@@ -9,7 +9,7 @@
             </h1>
             <p>今日の業務をここから始められます。</p>
         </div>
-        <a class="dashboard-link" [href]="contextPath + '/Portal'"><span><i class="fa-solid fa-gauge-high"></i></span>
+        <a class="dashboard-link" [href]="project.url('portal')"><span><i class="fa-solid fa-gauge-high"></i></span>
             <div><strong>業務ダッシュボード</strong><small>予定・通知・未処理をまとめて確認</small></div>
             <i class="fa-solid fa-arrow-right"></i></a>
     </section>
@@ -22,16 +22,16 @@
             </div>
         </div>
         <div class="quick-grid">
-            <a class="quick-card attendance" [href]="contextPath + '/WorkManagement'"><span class="card-icon"><i class="fa-solid fa-business-time"></i></span>
+            <a class="quick-card attendance" [href]="project.url('attendance')"><span class="card-icon"><i class="fa-solid fa-business-time"></i></span>
                 <div><strong>勤怠を入力</strong><small>打刻・勤務実績・月次申請</small></div>
                 <i class="fa-solid fa-chevron-right"></i></a>
-            <a class="quick-card report" [href]="contextPath + '/DairyWrite'"><span class="card-icon"><i class="fa-solid fa-file-pen"></i></span>
+            <a class="quick-card report" [href]="project.url('reportWrite')"><span class="card-icon"><i class="fa-solid fa-file-pen"></i></span>
                 <div><strong>報告書を作成</strong><small>下書き・提出状況を確認</small></div>
                 <i class="fa-solid fa-chevron-right"></i></a>
-            <a class="quick-card schedule" [href]="contextPath + '/OpenCalender'"><span class="card-icon"><i class="fa-solid fa-calendar-days"></i></span>
+            <a class="quick-card schedule" [href]="project.url('calendar')"><span class="card-icon"><i class="fa-solid fa-calendar-days"></i></span>
                 <div><strong>予定を確認</strong><small>共有予定・参加依頼を管理</small></div>
                 <i class="fa-solid fa-chevron-right"></i></a>
-            <a class="quick-card chat" [href]="contextPath + '/ChatChanelList'"><span class="card-icon"><i class="fa-solid fa-comments"></i></span>
+            <a class="quick-card chat" [href]="project.url('chatList')"><span class="card-icon"><i class="fa-solid fa-comments"></i></span>
                 <div><strong>チャットを開く</strong><small>メンバーとすぐにやり取り</small></div>
                 <i class="fa-solid fa-chevron-right"></i></a>
         </div>
@@ -46,15 +46,15 @@
                 </div>
             </div>
             <div class="menu-list">
-                <a [href]="contextPath + '/ChatChanelList'"><i class="fa-solid fa-comment-dots"></i>
+                <a [href]="project.url('chatList')"><i class="fa-solid fa-comment-dots"></i>
                     <div><strong>チャット</strong><small>個別・グループチャット</small></div></a>
-                <a [href]="contextPath + '/ThreadController'"><i class="fa-solid fa-users"></i>
+                <a [href]="project.url('threadList')"><i class="fa-solid fa-users"></i>
                     <div><strong>スレッド</strong><small>テーマごとの情報共有</small></div></a>
                 @if (data.searchUserInfo === 'true') {
-                    <a [href]="contextPath + '/UserSearch'"><i class="fa-solid fa-address-book"></i>
+                    <a [href]="project.url('userSearch')"><i class="fa-solid fa-address-book"></i>
                         <div><strong>ユーザー検索</strong><small>社員情報を検索・確認</small></div></a>
                 }
-                <a [href]="contextPath + '/QiitaGuide'" data-nw-progress-ignore><i class="fa-solid fa-book-open-reader"></i>
+                <a [href]="project.url('qiitaGuide')" data-nw-progress-ignore><i class="fa-solid fa-book-open-reader"></i>
                     <div><strong>Qiita記事を聴く</strong><small>技術記事を検索・解説・読み上げ</small></div></a>
             </div>
         </section>
@@ -67,32 +67,32 @@
                 </div>
             </div>
             <div class="menu-list">
-                <a [href]="contextPath + '/Portal'"><i class="fa-solid fa-bell"></i>
+                <a [href]="project.url('portal')"><i class="fa-solid fa-bell"></i>
                     <div><strong>通知・自分の申請</strong><small>承認結果や取下げを確認</small></div></a>
-                <a [href]="contextPath + '/ChangePassword'"><i class="fa-solid fa-key"></i>
+                <a [href]="project.url('changePassword')"><i class="fa-solid fa-key"></i>
                     <div><strong>パスワード変更</strong><small>ログインパスワードを安全に更新</small></div></a>
                 @if (data.canReviewApprovals === 'true') {
-                    <a [href]="contextPath + '/ReportApproval'"><i class="fa-solid fa-circle-check"></i>
+                    <a [href]="project.url('reportApproval')"><i class="fa-solid fa-circle-check"></i>
                         <div><strong>承認管理</strong><small>未処理申請の確認・一括承認</small></div></a>
                     }
                 @if (data.canManageUsers === 'true') {
-                    <a [href]="contextPath + '/UserInsert'"><i class="fa-solid fa-user-plus"></i>
+                    <a [href]="project.url('userRegistration')"><i class="fa-solid fa-user-plus"></i>
                         <div><strong>新規ユーザー登録</strong><small>アカウントと権限を登録</small></div></a>
-                    <a [href]="contextPath + '/UserSecurityAdmin'"><i class="fa-solid fa-user-shield"></i>
+                    <a [href]="project.url('userSecurity')"><i class="fa-solid fa-user-shield"></i>
                         <div>
                             <strong>アカウント管理</strong><small>無効化・ロック解除・パスワード再設定</small>
                         </div></a>
                     }
                 @if (data.canAudit === 'true') {
-                    <a [href]="contextPath + '/AuditLog'"><i class="fa-solid fa-clipboard-list"></i>
+                    <a [href]="project.url('auditLog')"><i class="fa-solid fa-clipboard-list"></i>
                         <div><strong>監査ログ</strong><small>ログイン・変更・承認操作を検索</small></div></a>
                     }
                 @if (data.canManageAi === 'true') {
-                    <a [href]="contextPath + '/AiCharacterAdmin'"><i class="fa-solid fa-robot"></i>
+                    <a [href]="project.url('aiCharacterAdmin')"><i class="fa-solid fa-robot"></i>
                         <div><strong>AI住人管理</strong><small>人格・興味・応答方法を設定</small></div></a>
                     }
                 @if (data.canViewDesign === 'true') {
-                    <a [href]="contextPath + '/ReverseEngineering'"><i class="fa-solid fa-diagram-project"></i>
+                    <a [href]="project.url('reverseEngineering')"><i class="fa-solid fa-diagram-project"></i>
                         <div><strong>設計リバース</strong><small>DB・Javaの構造と関係図を確認</small></div></a>
                     }
             </div>
@@ -104,16 +104,16 @@
         <details class="legacy-tools">
             <summary><i class="fa-solid fa-toolbox"></i> 外部・管理ツール</summary>
             <div>
-                <form [action]="contextPath + '/SelectApp?AppName=NC30001'" method="post">
+                <form [action]="project.url('selectApp', { AppName: 'NC30001' })" method="post">
                     <button><i class="fa-solid fa-cubes"></i> AX3アプリ</button>
                 </form>
-                <form [action]="contextPath + '/SelectApp?AppName=NC40001'" method="post">
+                <form [action]="project.url('selectApp', { AppName: 'NC40001' })" method="post">
                     <button><i class="fa-solid fa-layer-group"></i> AX4アプリ</button>
                 </form>
             </div>
         </details>
     }
-    <form class="home-logout" [action]="contextPath + '/Logout'" method="get" target="_self">
+    <form class="home-logout" [action]="project.url('logout')" method="get" target="_self">
         <button><i class="fa-solid fa-right-from-bracket"></i> ログアウト</button>
     </form>
 </main>

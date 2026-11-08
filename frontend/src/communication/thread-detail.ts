@@ -1,4 +1,5 @@
 import { Component, DestroyRef, ElementRef, inject } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 interface ThreadView {
     id: number;
@@ -19,8 +20,8 @@ interface ThreadView {
     host: { style: "display: contents" },
 })
 export class ThreadDetailComponent {
+    readonly project = projectRequest;
     private readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly contextPath = this.data["contextPath"] ?? "";
     readonly csrfToken = this.data["csrfToken"] ?? "";
     readonly flash = this.data["flash"] ?? "";
     readonly flashType = this.data["flashType"] ?? "";

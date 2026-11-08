@@ -33,9 +33,9 @@
     </form>
     <div class="attachments">
         @for (file of attachments; track file.id) {
-            <a [href]="contextPath + '/Attachment?id=' + file.id">{{ file.name }}</a>
+            <a [href]="project.url('attachment', { id: file.id })">{{ file.name }}</a>
         }
-        <form method="post" enctype="multipart/form-data" [action]="contextPath + '/Attachment'">
+        <form method="post" enctype="multipart/form-data" [action]="project.url('attachment')">
             <input type="hidden" name="csrfToken" [value]="csrfToken" />
             <input type="hidden" name="ownerType" value="CHAT" />
             <input type="hidden" name="ownerId" [value]="roomId" />

@@ -24,6 +24,11 @@ target/
 !.vscode/extensions.json
 .idea/
 
+# Metals and local Scala build servers
+/.metals/
+/.bloop/
+/.bsp/
+
 # Playwright
 node_modules/
 /.angular/

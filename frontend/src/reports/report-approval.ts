@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 interface ApplicationRow {
     id: string;
@@ -26,8 +27,8 @@ interface ApplicationDetail {
 })
 export class ReportApprovalComponent {
     private readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly action = (this.data["contextPath"] ?? "") + "/ReportApproval";
-    readonly reviewAction = location.pathname + location.search;
+    readonly action = projectRequest.url("reportApproval");
+    readonly reviewAction = projectRequest.url("current", new URLSearchParams(location.search));
     readonly csrfToken = this.data["csrfToken"] ?? "";
     readonly flash = this.data["flash"] ?? "";
     readonly flashType = this.data["flashType"] ?? "";

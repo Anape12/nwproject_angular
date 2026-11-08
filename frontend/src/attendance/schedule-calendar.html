@@ -5,8 +5,8 @@
             <a class="today-button" [href]="action">今日</a>
             <a class="nav-button" [href]="nextUrl" aria-label="翌月">›</a>
             <h1>{{ data.year }}年 {{ data.month }}月</h1>
-            <a class="today-button" [href]="contextPath + '/CalendarExchange'">iCalendar出力</a>
-            <form method="post" enctype="multipart/form-data" [action]="contextPath + '/CalendarExchange'">
+            <a class="today-button" [href]="project.url('calendarExchange')">iCalendar出力</a>
+            <form method="post" enctype="multipart/form-data" [action]="project.url('calendarExchange')">
                 <input type="file" name="calendarFile" accept=".ics,text/calendar" required />
                 <button class="today-button" type="submit">取込</button>
             </form>
@@ -38,7 +38,7 @@
     <aside class="event-panel">
         <h2>{{ event ? "予定を編集" : "予定を追加" }}</h2>
         @if (event && data.eventParticipant === "true") {
-            <form method="post" [action]="contextPath + '/ScheduleResponse'">
+            <form method="post" [action]="project.url('scheduleResponse')">
                 <input type="hidden" name="eventId" [value]="event.id" />
                 <button type="submit" name="status" value="ACCEPTED">参加する</button>
                 <button type="submit" name="status" value="DECLINED">辞退する</button>
@@ -111,10 +111,10 @@
             <div class="attachments">
                 <h3>関連資料</h3>
                 @for (file of attachments; track file.id) {
-                    <a [href]="contextPath + '/Attachment?id=' + file.id">{{ file.name }}</a>
+                    <a [href]="project.url('attachment', { id: file.id })">{{ file.name }}</a>
                 }
                 @if (data.eventOwner === "true") {
-                    <form method="post" enctype="multipart/form-data" [action]="contextPath + '/Attachment'">
+                    <form method="post" enctype="multipart/form-data" [action]="project.url('attachment')">
                         <input type="hidden" name="csrfToken" [value]="data.attachmentCsrf ?? ''" />
                         <input type="hidden" name="ownerType" value="SCHEDULE" />
                         <input type="hidden" name="ownerId" [value]="event.id" />

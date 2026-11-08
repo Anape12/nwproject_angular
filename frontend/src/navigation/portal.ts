@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, OnInit, signal } from "@angular/core";
-import { loadPageData } from "../shared/page-data";
+import { projectRequest } from "../infr/project-request";
 
 interface PortalData {
     portalError?: string;
@@ -21,10 +21,11 @@ interface PortalData {
     host: { style: "display: contents" },
 })
 export class PortalComponent implements OnInit {
+    readonly project = projectRequest;
     private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     readonly contextPath = this.host.dataset["contextPath"] ?? "";
     readonly portalError = signal("");
-    readonly portalUrl = this.contextPath + "/Portal";
+    readonly portalUrl = projectRequest.url("portal");
     private readonly query = new URLSearchParams(location.search);
     readonly searchTerm = this.query.get("q") ?? "";
     readonly data = signal<PortalData | null>(null);
@@ -32,7 +33,7 @@ export class PortalComponent implements OnInit {
 
     async ngOnInit(): Promise<void> {
         try {
-            const data = await loadPageData<PortalData>(this.contextPath, "/Portal", this.query);
+            const data = await projectRequest.loadPageData<PortalData>("portal", this.query);
             this.portalError.set(data?.portalError ?? "");
             this.data.set(data);
         } catch {

@@ -1,4 +1,5 @@
 import { Component, OnInit, signal } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 @Component({
     selector: "nw-login",
@@ -6,7 +7,7 @@ import { Component, OnInit, signal } from "@angular/core";
     host: { style: "display: contents" },
 })
 export class LoginComponent implements OnInit {
-    readonly loginUrl = location.pathname;
+    readonly loginUrl = projectRequest.url("current");
     readonly errorMessage = signal("");
     readonly failed = signal(false);
     readonly submitting = signal(false);
@@ -14,9 +15,8 @@ export class LoginComponent implements OnInit {
     async ngOnInit(): Promise<void> {
         const query = new URLSearchParams(location.search);
         if (!query.has("sessionInvalid") && !query.has("windowInvalid")) return;
-        query.set("format", "json");
         try {
-            const response = await fetch(this.loginUrl + "?" + query, { mode: "same-origin" });
+            const response = await projectRequest.request("current", { query, json: true });
             if (response.ok && !this.submitting() && !this.failed()) {
                 const { message } = await response.json();
                 if (!this.submitting() && !this.failed()) this.errorMessage.set(message);
@@ -32,9 +32,9 @@ export class LoginComponent implements OnInit {
         this.submitting.set(true);
         try {
             const values = new FormData(form);
-            const response = await fetch(this.loginUrl + "?format=json", {
+            const response = await projectRequest.request("current", {
+                json: true,
                 method: "POST",
-                mode: "same-origin",
                 body: new URLSearchParams({
                     userId: String(values.get("userId") ?? ""),
                     password: String(values.get("password") ?? ""),

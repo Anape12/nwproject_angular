@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 interface AccountRow {
     userId: string;
@@ -20,9 +21,9 @@ interface AccountRow {
     host: { style: "display: contents" },
 })
 export class UserSecurityComponent {
+    readonly project = projectRequest;
     private readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly contextPath = this.data["contextPath"] ?? "";
-    readonly action = this.contextPath + "/UserSecurityAdmin";
+    readonly action = projectRequest.url("userSecurity");
     readonly csrf = this.data["csrfToken"] ?? "";
     readonly flash = this.data["flash"] ?? "";
     readonly flashType = this.data["flashType"] ?? "";
@@ -30,6 +31,6 @@ export class UserSecurityComponent {
     readonly users: AccountRow[] = JSON.parse(this.data["users"] || "[]");
 
     birthdayUrl(userId: string): string {
-        return this.contextPath + "/UserBirthday?" + new URLSearchParams({ userId });
+        return projectRequest.url("userBirthday", new URLSearchParams({ userId }));
     }
 }

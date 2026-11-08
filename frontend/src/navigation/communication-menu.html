@@ -1,9 +1,9 @@
 <header class="mode-header">
-    <a [href]="navigation.contextPath + '/CommunicationMenu'">
+    <a [href]="project.url('communicationMenu')">
         <i class="fa-solid fa-comments"></i> NW Communication
     </a>
     <div>
-        <a class="switch-mode" [href]="navigation.contextPath + '/MenuSelect'">
+        <a class="switch-mode" [href]="project.url('menuSelect')">
             <i class="fa-solid fa-table-cells-large"></i> メニュー切替
         </a>
         <span>{{ navigation.lastName }} {{ navigation.firstName }} さん</span>
@@ -16,7 +16,7 @@
         <p>会話と情報共有に必要な機能だけを、シンプルにまとめています。</p>
     </div>
     <div class="communication-grid">
-        <a [href]="navigation.contextPath + '/ChatChanelList'" target="_blank" rel="noopener">
+        <a [href]="project.url('chatList')" target="_blank" rel="noopener">
             <span class="communication-icon"><i class="fa-solid fa-comment-dots"></i></span>
             <div>
                 <small>REALTIME CHAT</small>
@@ -25,7 +25,7 @@
                 <strong>チャットを開く <i class="fa-solid fa-arrow-right"></i></strong>
             </div>
         </a>
-        <a [href]="navigation.contextPath + '/ThreadController'" target="_blank" rel="noopener">
+        <a [href]="project.url('threadList')" target="_blank" rel="noopener">
             <span class="communication-icon"><i class="fa-solid fa-users-rectangle"></i></span>
             <div>
                 <small>DISCUSSION</small>
@@ -36,10 +36,10 @@
         </a>
     </div>
     <div class="communication-footer">
-        <a [href]="navigation.contextPath + '/MenuSelect'">
+        <a [href]="project.url('menuSelect')">
             <i class="fa-solid fa-arrow-left"></i> 利用メニュー選択へ戻る
         </a>
-        <form [action]="navigation.contextPath + '/Logout'" method="get">
+        <form [action]="project.url('logout')" method="get">
             <button>ログアウト</button>
         </form>
     </div>

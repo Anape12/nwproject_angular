@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 interface CharacterRow {
     id: string;
@@ -27,7 +28,7 @@ interface JobRow {
 })
 export class AiCharacterAdminComponent {
     private readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly action = (this.data["contextPath"] ?? "") + "/AiCharacterAdmin";
+    readonly action = projectRequest.url("aiCharacterAdmin");
     readonly csrfToken = this.data["csrfToken"] ?? "";
     readonly flash = this.data["flash"] ?? "";
     readonly flashType = this.data["flashType"] ?? "";

@@ -1,5 +1,5 @@
-import { Component, computed, ElementRef, inject, OnInit, signal } from "@angular/core";
-import { requestWithLoginContext } from "../shared/login-context";
+import { Component, computed, OnInit, signal } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 type View = "database" | "java";
 interface Table {
@@ -32,7 +32,7 @@ interface JavaStructure {
     host: { style: "display: contents" },
 })
 export class ReverseEngineeringComponent implements OnInit {
-    readonly contextPath = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset["contextPath"] ?? "";
+    readonly project = projectRequest;
     readonly view = signal<View>("database");
     readonly search = signal("");
     readonly selectedName = signal<string | null>(null);
@@ -96,7 +96,7 @@ export class ReverseEngineeringComponent implements OnInit {
         if (cached) return;
 
         try {
-            const response = await requestWithLoginContext(this.contextPath + "/ReverseEngineering?view=" + view, { mode: "same-origin" });
+            const response = await projectRequest.request("reverseEngineering", { query: { view } });
             if (requestId !== this.requestId) return;
             if (response.redirected) {
                 location.assign(response.url);

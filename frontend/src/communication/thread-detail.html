@@ -1,6 +1,6 @@
 <main id="container" class="thread-detail-page">
     <div class="thread-detail-nav">
-        <a [href]="contextPath + '/ThreadController'">← スレッド一覧へ</a>
+        <a [href]="project.url('threadList')">← スレッド一覧へ</a>
     </div>
     @if (flash) {
         <p [class]="'thread-flash ' + flashType">{{ flash }}</p>
@@ -15,7 +15,7 @@
                 <h1>{{ thread.title }}</h1>
             </div>
             @if (thread.canManage) {
-                <form method="post" [action]="contextPath + '/ThreadStatus'" (submit)="confirmStatusChange($event)">
+                <form method="post" [action]="project.url('threadStatus')" (submit)="confirmStatusChange($event)">
                     <input type="hidden" name="csrfToken" [value]="csrfToken" />
                     <input type="hidden" name="threadId" [value]="thread.id" />
                     <input type="hidden" name="action" [value]="thread.closed ? 'reopen' : 'close'" />
@@ -51,7 +51,7 @@
     } @else {
         <section class="comment-entry">
             <h2 class="section-title">コメント投稿</h2>
-            <form [action]="contextPath + '/ThreadCommentController'" method="post" class="comment-form">
+            <form [action]="project.url('threadComment')" method="post" class="comment-form">
                 <input type="hidden" name="csrfToken" [value]="csrfToken" />
                 <input type="hidden" name="threadId" [value]="thread.id" />
                 <textarea name="commentText" maxlength="500" required placeholder="コメントを入力してください"></textarea>

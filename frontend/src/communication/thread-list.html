@@ -1,6 +1,6 @@
 <main id="container">
     <h1 class="page-title">スレッド一覧</h1>
-    <a class="new-thread-link" [href]="contextPath + '/ThreadCreate'"> ＋ 新規スレッド </a>
+    <a class="new-thread-link" [href]="project.url('threadCreate')"> ＋ 新規スレッド </a>
     @if (list.failed()) {
         <p role="alert">スレッド一覧を読み込めませんでした。</p>
     } @else if (!list.rows()) {
@@ -15,7 +15,7 @@
             <div class="thread-content">{{ thread.content }}</div>
             <div class="thread-footer">
                 <span class="thread-author">投稿者：{{ thread.authorId }}</span>
-                <a [href]="contextPath + '/ThreadDetailController?id=' + thread.threadId">詳細を見る →</a>
+                <a [href]="project.url('threadDetail', { id: thread.threadId })">詳細を見る →</a>
             </div>
         </article>
     }

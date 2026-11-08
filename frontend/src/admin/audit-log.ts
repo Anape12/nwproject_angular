@@ -1,5 +1,5 @@
-import { Component, ElementRef, inject, OnInit, signal } from "@angular/core";
-import { loadPageData } from "../shared/page-data";
+import { Component, OnInit, signal } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 interface AuditLogRow {
     createdAt: string | null;
@@ -19,7 +19,7 @@ interface AuditLogRow {
     host: { style: "display: contents" },
 })
 export class AuditLogComponent implements OnInit {
-    readonly contextPath = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset["contextPath"] ?? "";
+    readonly project = projectRequest;
     readonly query = new URLSearchParams(location.search);
     readonly categories = ["AUTH", "USER", "SECURITY", "ATTENDANCE", "APPROVAL"];
     readonly logs = signal<AuditLogRow[] | null>(null);
@@ -27,7 +27,7 @@ export class AuditLogComponent implements OnInit {
 
     async ngOnInit(): Promise<void> {
         try {
-            this.logs.set(await loadPageData<AuditLogRow[]>(this.contextPath, "/AuditLog", this.query));
+            this.logs.set(await projectRequest.loadPageData<AuditLogRow[]>("auditLog", this.query));
         } catch {
             this.loadFailed.set(true);
         }

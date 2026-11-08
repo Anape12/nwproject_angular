@@ -1,6 +1,6 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 import { initializeLoginContext } from "../shared/login-context";
-import { loadPageData } from "../shared/page-data";
 
 interface MenuData {
     [key: string]: string | boolean | null;
@@ -11,15 +11,17 @@ interface MenuData {
 }
 
 export async function prepareStaticPage(host: HTMLElement): Promise<boolean> {
-    const endpoint = host.dataset["staticPage"];
+    const route = host.dataset["staticPage"] || "current";
+    if (route !== "current" && route !== "menuSelect" && route !== "selectApp") {
+        throw new Error("Unknown page bootstrap route");
+    }
     const query = new URLSearchParams(location.search);
-    if (endpoint) {
+    if (route !== "current") {
         for (const key of [...query.keys()]) {
             if (key !== "_loginContext" && key !== "loginFresh") query.delete(key);
         }
     }
-    const path = endpoint ? new URL(endpoint, location.href).pathname : location.pathname;
-    const data = await loadPageData<MenuData>("", path, query);
+    const data = await projectRequest.loadPageData<MenuData>(route, query);
     if (!data) return false;
     const { loginContext, contextPath, firstName, lastName, ...pageData } = data;
     const navigation = { contextPath, firstName: firstName ?? "", lastName: lastName ?? "" };
@@ -28,10 +30,11 @@ export async function prepareStaticPage(host: HTMLElement): Promise<boolean> {
     const header = document.querySelector<HTMLElement>("nw-header");
     if (header) Object.assign(header.dataset, navigation, { loggedIn: "true" });
 
-    initializeLoginContext(loginContext, contextPath);
+    projectRequest.setContextPath(contextPath);
+    initializeLoginContext(loginContext);
     if (host.hasAttribute("data-page-json")) {
-        const content = await loadPageData<Record<string, unknown>>(
-            "", location.pathname, new URLSearchParams(location.search),
+        const content = await projectRequest.loadPageData<Record<string, unknown>>(
+            "current", new URLSearchParams(location.search),
         );
         if (!content) return false;
         setPageData(host, content);
@@ -46,11 +49,10 @@ function setPageData(host: HTMLElement, data: Record<string, unknown>): void {
 }
 
 function readNavigationData() {
-    const { contextPath, firstName, lastName, loggedIn } =
+    const { firstName, lastName, loggedIn } =
         inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
 
     return {
-        contextPath: contextPath ?? "",
         firstName: firstName ?? "",
         lastName: lastName ?? "",
         loggedIn: loggedIn === "true",
@@ -63,6 +65,7 @@ function readNavigationData() {
     host: { style: "display: contents" },
 })
 export class MenuSelectComponent {
+    readonly project = projectRequest;
     readonly navigation = readNavigationData();
 }
 
@@ -72,6 +75,7 @@ export class MenuSelectComponent {
     host: { style: "display: contents" },
 })
 export class CommunicationMenuComponent {
+    readonly project = projectRequest;
     readonly navigation = readNavigationData();
 }
 
@@ -81,5 +85,6 @@ export class CommunicationMenuComponent {
     host: { style: "display: contents" },
 })
 export class HeaderComponent {
+    readonly project = projectRequest;
     readonly navigation = readNavigationData();
 }

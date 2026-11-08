@@ -2,7 +2,7 @@
     <div class="thread-card">
         <h1 class="page-title">新規スレッド</h1>
 
-        <form [action]="contextPath + '/ThreadCreate'" method="post">
+        <form [action]="project.url('threadCreate')" method="post">
             <div class="form-group">
                 <label for="title">タイトル</label>
                 <input

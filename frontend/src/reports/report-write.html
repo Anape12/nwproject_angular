@@ -30,10 +30,10 @@
                 <div class="attachments">
                     <h3>添付ファイル</h3>
                     @for (file of attachments; track file.id) {
-                        <a [href]="contextPath + '/Attachment?id=' + file.id">{{ file.name }}</a>
+                        <a [href]="project.url('attachment', { id: file.id })">{{ file.name }}</a>
                     }
                     @if (selected.editable) {
-                        <form method="post" enctype="multipart/form-data" [action]="contextPath + '/Attachment'">
+                        <form method="post" enctype="multipart/form-data" [action]="project.url('attachment')">
                             <input type="hidden" name="csrfToken" [value]="attachmentCsrf" />
                             <input type="hidden" name="ownerType" value="REPORT" />
                             <input type="hidden" name="ownerId" [value]="selected.report.id" />

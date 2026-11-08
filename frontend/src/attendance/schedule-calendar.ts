@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 interface CalendarDay {
     date: string;
@@ -29,9 +30,9 @@ interface EditEvent {
     host: { style: "display: contents" },
 })
 export class ScheduleCalendarComponent {
+    readonly project = projectRequest;
     readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly contextPath = this.data["contextPath"] ?? "";
-    readonly action = this.contextPath + "/OpenCalender";
+    readonly action = projectRequest.url("calendar");
     readonly currentUrl = this.monthUrl(this.data["year"], this.data["month"]);
     readonly previousUrl = this.monthUrl(this.data["previousYear"], this.data["previousMonth"]);
     readonly nextUrl = this.monthUrl(this.data["nextYear"], this.data["nextMonth"]);

@@ -1,15 +1,14 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
-import { loadPageData } from "../shared/page-data";
-import { requestWithLoginContext } from "../shared/login-context";
+import { projectRequest } from "../infr/project-request";
 
 function pageAttributes(): DOMStringMap {
     return inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
 }
 
-function loadRows<T>(contextPath: string, path: string) {
+function loadRows<T>(route: "threadList" | "chatList") {
     const rows = signal<T[] | null>(null);
     const failed = signal(false);
-    void loadPageData<T[]>(contextPath, path, new URLSearchParams(location.search))
+    void projectRequest.loadPageData<T[]>(route, new URLSearchParams(location.search))
         .then(value => rows.set(value))
         .catch(() => failed.set(true));
     return { rows, failed };
@@ -44,9 +43,8 @@ interface ChatUserRow {
     host: { style: "display: contents" },
 })
 export class ThreadListComponent {
-    private readonly data = pageAttributes();
-    readonly contextPath = this.data["contextPath"] ?? "";
-    readonly list = loadRows<ThreadRow>(this.contextPath, "/ThreadController");
+    readonly project = projectRequest;
+    readonly list = loadRows<ThreadRow>("threadList");
 }
 
 @Component({
@@ -55,13 +53,12 @@ export class ThreadListComponent {
     host: { style: "display: contents" },
 })
 export class ChatListComponent {
-    private readonly data = pageAttributes();
-    readonly contextPath = this.data["contextPath"] ?? "";
-    readonly list = loadRows<RoomRow>(this.contextPath, "/ChatChanelList");
+    readonly project = projectRequest;
+    readonly list = loadRows<RoomRow>("chatList");
 
     roomUrl(room: RoomRow): string {
         const query = new URLSearchParams({ roomId: room.roomId, displayName: room.displayName ?? "" });
-        return this.contextPath + "/ChatChanelRoom?" + query;
+        return projectRequest.url("chatRoom", query);
     }
 }
 
@@ -71,8 +68,8 @@ export class ChatListComponent {
     host: { style: "display: contents" },
 })
 export class ChatCreateComponent {
+    readonly project = projectRequest;
     private readonly data = pageAttributes();
-    readonly contextPath = this.data["contextPath"] ?? "";
     readonly errorMessage = signal("");
     readonly submitting = signal(false);
     readonly users: ChatUserRow[] = JSON.parse(this.data["rows"] || "[]");
@@ -83,9 +80,9 @@ export class ChatCreateComponent {
         this.submitting.set(true);
         this.errorMessage.set("");
         try {
-            const response = await requestWithLoginContext(this.contextPath + "/ChatRoomCreate?format=json", {
+            const response = await projectRequest.request("chatCreate", {
+                json: true,
                 method: "POST",
-                mode: "same-origin",
                 body: new URLSearchParams({ targetUserId }),
             });
             if (response.redirected) {
@@ -114,10 +111,10 @@ export class ChatCreateComponent {
     host: { style: "display: contents" },
 })
 export class ChatMembersComponent {
+    readonly project = projectRequest;
     private readonly data = pageAttributes();
-    readonly contextPath = this.data["contextPath"] ?? "";
     readonly roomId = this.data["roomId"] ?? "";
-    readonly roomUrl = this.contextPath + "/ChatChanelRoom?" + new URLSearchParams({ roomId: this.roomId });
+    readonly roomUrl = projectRequest.url("chatRoom", new URLSearchParams({ roomId: this.roomId }));
     readonly csrfToken = this.data["csrfToken"] ?? "";
     readonly flash = this.data["flash"] ?? "";
     readonly members: ChatUserRow[] = JSON.parse(this.data["members"] || "[]");

@@ -1,5 +1,5 @@
 <header class="mode-header">
-    <a [href]="navigation.contextPath + '/MenuSelect'">NW Project</a>
+    <a [href]="project.url('menuSelect')">NW Project</a>
     <span>{{ navigation.lastName }} {{ navigation.firstName }} さん</span>
 </header>
 <main class="mode-select">
@@ -9,7 +9,7 @@
         <p>目的に合わせて作業スペースを選んでください。後からいつでも切り替えられます。</p>
     </div>
     <div class="mode-grid">
-        <a class="mode-card communication" [href]="navigation.contextPath + '/CommunicationMenu'">
+        <a class="mode-card communication" [href]="project.url('communicationMenu')">
             <span class="mode-icon"><i class="fa-solid fa-comments"></i></span>
             <div class="mode-copy">
                 <small>COMMUNICATION</small>
@@ -22,7 +22,7 @@
             </div>
             <span class="mode-open">開く <i class="fa-solid fa-arrow-right"></i></span>
         </a>
-        <a class="mode-card business" [href]="navigation.contextPath + '/BusinessMenu'">
+        <a class="mode-card business" [href]="project.url('businessMenu')">
             <span class="mode-icon"><i class="fa-solid fa-briefcase"></i></span>
             <div class="mode-copy">
                 <small>BUSINESS</small>
@@ -37,7 +37,7 @@
             <span class="mode-open">開く <i class="fa-solid fa-arrow-right"></i></span>
         </a>
     </div>
-    <form class="mode-logout" [action]="navigation.contextPath + '/Logout'" method="get">
+    <form class="mode-logout" [action]="project.url('logout')" method="get">
         <button><i class="fa-solid fa-right-from-bracket"></i> ログアウト</button>
     </form>
 </main>

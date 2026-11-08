@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 interface ReportRow {
     id: string;
@@ -24,9 +25,9 @@ interface ReportDetail {
     host: { style: "display: contents" },
 })
 export class ReportWriteComponent {
+    readonly project = projectRequest;
     private readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly contextPath = this.data["contextPath"] ?? "";
-    readonly action = this.contextPath + "/DairyWrite";
+    readonly action = projectRequest.url("reportWrite");
     readonly csrfToken = this.data["csrfToken"] ?? "";
     readonly attachmentCsrf = this.data["attachmentCsrf"] ?? "";
     readonly today = this.data["today"] ?? "";

@@ -4,14 +4,14 @@
             <h1>個別チャットを開始</h1>
             <p>チャットしたいユーザーを選択してください。</p>
         </div>
-        <a class="chat-secondary-btn" [href]="contextPath + '/ChatChanelList'">戻る</a>
+        <a class="chat-secondary-btn" [href]="project.url('chatList')">戻る</a>
     </div>
     @if (errorMessage()) {
         <p class="chat-error" role="alert">{{ errorMessage() }}</p>
     }
     <div class="chat-user-list">
         @for (user of users; track user.userId) {
-            <form class="chat-user-item" method="post" [action]="contextPath + '/ChatRoomCreate'"
+            <form class="chat-user-item" method="post" [action]="project.url('chatCreate')"
                 (submit)="create($event, user.userId)">
                 <div class="channel-icon">{{ user.ai ? "AI" : "👤" }}</div>
                 <div class="chat-user-info">

@@ -1,7 +1,7 @@
 <main class="security-page">
     <div class="page-head">
         <div><p>ADMINISTRATION</p><h1>アカウント・セキュリティ管理</h1></div>
-        <a [href]="contextPath + '/AuditLog'">監査ログを検索</a>
+        <a [href]="project.url('auditLog')">監査ログを検索</a>
     </div>
     @if (flash) {
         <div [class]="'alert ' + flashType" role="status">{{ flash }}</div>

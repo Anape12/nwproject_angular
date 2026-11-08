@@ -1,5 +1,5 @@
-import { Component, ElementRef, inject, signal } from "@angular/core";
-import { requestWithLoginContext } from "../shared/login-context";
+import { Component, signal } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 interface SearchRow {
     id: number;
@@ -13,8 +13,7 @@ interface SearchRow {
     host: { style: "display: contents" },
 })
 export class UserSearchComponent {
-    private readonly attributes = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly searchUrl = (this.attributes["contextPath"] ?? "") + "/UserSearch";
+    readonly searchUrl = projectRequest.url("userSearch");
     readonly searchFailed = signal(false);
     readonly searching = signal(false);
     readonly results = signal<SearchRow[] | null>(null);
@@ -26,8 +25,8 @@ export class UserSearchComponent {
         this.searchFailed.set(false);
         this.results.set(null);
         try {
-            const response = await requestWithLoginContext(this.searchUrl, {
-                method: "POST", mode: "same-origin", body: new URLSearchParams({ userId }),
+            const response = await projectRequest.request("userSearch", {
+                method: "POST", body: new URLSearchParams({ userId }),
             });
             if (response.redirected) {
                 location.assign(response.url);

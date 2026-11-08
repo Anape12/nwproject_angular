@@ -1,12 +1,12 @@
 <div class="header">
-    <a class="logo" [href]="navigation.contextPath + '/MenuSelect'">NW Project</a>
+    <a class="logo" [href]="project.url('menuSelect')">NW Project</a>
     <nav class="header-nav">
-        <a [href]="navigation.contextPath + '/BusinessMenu'">業務メニュー</a>
-        <a [href]="navigation.contextPath + '/MenuSelect'">切替</a>
-        <a [href]="navigation.contextPath + '/WorkManagement'">勤怠</a>
-        <a [href]="navigation.contextPath + '/OpenCalender'">予定</a>
-        <a [href]="navigation.contextPath + '/ChatChanelList'">チャット</a>
-        <a [href]="navigation.contextPath + '/UserBirthday'">生年月日</a>
+        <a [href]="project.url('businessMenu')">業務メニュー</a>
+        <a [href]="project.url('menuSelect')">切替</a>
+        <a [href]="project.url('attendance')">勤怠</a>
+        <a [href]="project.url('calendar')">予定</a>
+        <a [href]="project.url('chatList')">チャット</a>
+        <a [href]="project.url('userBirthday')">生年月日</a>
     </nav>
     <div class="login-user">
         @if (navigation.loggedIn) {

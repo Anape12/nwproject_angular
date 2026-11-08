@@ -4,10 +4,10 @@
             <p>AUDIT TRAIL</p>
             <h1>監査ログ検索</h1>
         </div>
-        <a [href]="contextPath + '/UserSecurityAdmin'">アカウント管理</a>
+        <a [href]="project.url('userSecurity')">アカウント管理</a>
     </div>
 
-    <form class="audit-filter" [action]="contextPath + '/AuditLog'" method="get">
+    <form class="audit-filter" [action]="project.url('auditLog')" method="get">
         <label>
             ユーザーID
             <input name="userId" [value]="query.get('userId') ?? ''" />

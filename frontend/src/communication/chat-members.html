@@ -27,7 +27,7 @@
     <h2>招待可能</h2>
     <div class="chat-user-list">
         @for (user of available; track user.userId) {
-            <form class="chat-user-item" method="post" [action]="contextPath + '/ChatMemberManage'">
+            <form class="chat-user-item" method="post" [action]="project.url('chatMembers')">
                 <input type="hidden" name="csrfToken" [value]="csrfToken" />
                 <input type="hidden" name="roomId" [value]="roomId" />
                 <input type="hidden" name="userId" [value]="user.userId" />

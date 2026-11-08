@@ -1,4 +1,5 @@
 import { Component, computed, ElementRef, inject, signal } from "@angular/core";
+import { projectRequest } from "../infr/project-request";
 
 interface AttendanceRow {
     id: string;
@@ -34,10 +35,9 @@ interface DayRow {
 })
 export class AttendanceComponent {
     readonly data = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.dataset;
-    readonly contextPath = this.data["contextPath"] ?? "";
-    readonly action = this.contextPath + "/WorkManagement";
-    readonly attendanceAction = this.contextPath + "/AttendanceAction";
-    readonly reportAction = this.contextPath + "/DairyWrite";
+    readonly action = projectRequest.url("attendance");
+    readonly attendanceAction = projectRequest.url("attendanceAction");
+    readonly reportAction = projectRequest.url("reportWrite");
     readonly currentUrl = this.monthUrl(this.data["year"], this.data["month"]);
     readonly previousUrl = this.monthUrl(this.data["previousYear"], this.data["previousMonth"]);
     readonly nextUrl = this.monthUrl(this.data["nextYear"], this.data["nextMonth"]);

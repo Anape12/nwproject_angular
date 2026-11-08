@@ -38,11 +38,11 @@
         }
 
         <div class="stats">
-            <a [href]="contextPath + '/WorkManagement'">
+            <a [href]="project.url('attendance')">
                 <strong>{{ page.dashboard.attendance.recorded }}</strong><span>今月の勤怠入力</span>
                 <small>要対応 {{ page.dashboard.attendance.actionable }}件</small>
             </a>
-            <a [href]="contextPath + '/ReportApproval'">
+            <a [href]="project.url('reportApproval')">
                 <strong>{{ page.dashboard.pendingApprovals }}</strong><span>未処理の承認</span>
             </a>
             <div><strong>{{ page.dashboard.unreadCount }}</strong><span>未読通知</span></div>
@@ -53,7 +53,7 @@
             <section class="card">
                 <h2>本日の予定</h2>
                 @for (event of page.dashboard.todayEvents; track event.event_id) {
-                    <a class="item" [href]="contextPath + '/OpenCalender?edit=' + event.event_id">
+                    <a class="item" [href]="project.url('calendar', { edit: event.event_id })">
                         <i [style.background-color]="event.color"></i><b>{{ event.title }}</b><span>{{ event.start_at }}</span>
                     </a>
                 } @empty {
@@ -80,7 +80,7 @@
                 <h2>最近の報告書</h2>
                 <div class="results">
                     @for (report of page.dashboard.recentReports; track report.report_id) {
-                        <a [href]="contextPath + '/DairyWrite?edit=' + report.report_id">
+                        <a [href]="project.url('reportWrite', { edit: report.report_id })">
                             <b>{{ report.title }}</b><span>{{ report.report_date }} ・ {{ report.status }}</span>
                         </a>
                     }

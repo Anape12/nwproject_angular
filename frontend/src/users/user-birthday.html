@@ -1,7 +1,7 @@
 <main class="security-page">
     <h1>生年月日の確認・変更</h1>
     <p>対象ユーザー：{{ data.targetUserId }}</p>
-    <form method="post" [action]="contextPath + '/UserBirthday'">
+    <form method="post" [action]="project.url('userBirthday')">
         <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
         <input type="hidden" name="userId" [value]="data.targetUserId ?? ''" />
         <label>生年月日 <input type="date" name="birthday" [value]="data.birthday ?? ''" required /></label>
