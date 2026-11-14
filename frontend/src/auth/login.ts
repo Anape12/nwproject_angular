@@ -1,7 +1,10 @@
 import { Component, OnInit, signal } from "@angular/core";
 import { projectRequest } from "../infr/project-request";
 
+import { CustomTextComponent } from "../component/text/Custom-Text-Component";
+
 @Component({
+    imports: [CustomTextComponent],
     selector: "nw-login",
     templateUrl: "./login.html",
     host: { style: "display: contents" },

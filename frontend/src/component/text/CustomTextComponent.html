@@ -1,0 +1,13 @@
+<input
+    #textInput
+    [id]="inputId || name"
+    [name]="name"
+    [type]="textType"
+    [value]="content"
+    [required]="required"
+    [attr.maxlength]="maxLength"
+    [attr.autocomplete]="autocomplete"
+    [class]="variant"
+    (focus)="onFocus($event)"
+    (blur)="onBlur($event, textInput.value)"
+/>
