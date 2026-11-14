@@ -107,6 +107,8 @@ public final class BirthdayRuntime implements AutoCloseable {
 
     private static HikariDataSource pool(String url, String user, String password, String name) {
         var config = new HikariConfig();
+        // Tomcat may initialize DriverManager before the web application's JDBC drivers are visible.
+        config.setDriverClassName("com.mysql.cj.jdbc.Driver");
         config.setJdbcUrl(url);
         config.setUsername(user);
         config.setPassword(password);
