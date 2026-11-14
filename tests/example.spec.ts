@@ -9,18 +9,24 @@ test.describe("ログイン後のメニュー選択", () => {
     });
 
     test("認証失敗を表示し、ログインフォームに戻れる", async ({ page }) => {
-        await page.locator("#userId").fill("");
-        await page.getByRole("button", { name: "ログイン" }).click();
+        await page.getByLabel("ユーザーID", { exact: true }).fill("e2eUnknownUser");
+        await page.getByLabel("パスワード", { exact: true }).fill("InvalidTest123");
+        await page.getByRole("button", { name: "ログイン", exact: true }).click();
 
         await expect(page.getByRole("heading", { name: "ログインできませんでした" })).toBeVisible();
         await page.getByRole("link", { name: "ログイン画面に戻る" }).click();
-        await expect(page.locator("#userId")).toBeVisible();
+        await expect(page.getByLabel("ユーザーID", { exact: true })).toBeVisible();
     });
 
     test("チャットメニューと業務メニューを選択できる", async ({ page }) => {
-        await page.locator("#userId").fill(userId);
-        await page.locator("#password").fill(password);
-        await page.getByRole("button", { name: "ログイン" }).click();
+        const userIdField = page.getByLabel("ユーザーID", { exact: true });
+        const passwordField = page.getByLabel("パスワード", { exact: true });
+        await expect(userIdField).toHaveAttribute("required", "");
+        await expect(passwordField).toHaveAttribute("required", "");
+        await expect(passwordField).toHaveAttribute("type", "password");
+        await userIdField.fill(userId);
+        await passwordField.fill(password);
+        await page.getByRole("button", { name: "ログイン", exact: true }).click();
 
         await expect(page).toHaveURL((url) => url.pathname === "/MenuSelect");
         await expect(page).toHaveTitle("利用メニューを選択｜NW Project");

@@ -5,8 +5,8 @@ test.describe("生年月日の暗号化保存", () => {
 
     test("本人の表示と変更、他人へのアクセス拒否", async ({ page }) => {
         await page.goto("/Login");
-        await page.locator("#userId").fill("privacyAlice");
-        await page.locator("#password").fill("TemporaryTest123");
+        await page.getByLabel("ユーザーID", { exact: true }).fill("privacyAlice");
+        await page.getByLabel("パスワード", { exact: true }).fill("TemporaryTest123");
         await page.getByRole("button", { name: "ログイン", exact: true }).click();
         await expect(page).toHaveURL((url) => url.pathname === "/MenuSelect");
         await page.goto("/UserBirthday");
@@ -34,8 +34,8 @@ test.describe("生年月日の暗号化保存", () => {
 
     test("管理者は対象ユーザーを編集できる", async ({ page }) => {
         await page.goto("/Login");
-        await page.locator("#userId").fill("privacyAdmin");
-        await page.locator("#password").fill("TemporaryTest123");
+        await page.getByLabel("ユーザーID", { exact: true }).fill("privacyAdmin");
+        await page.getByLabel("パスワード", { exact: true }).fill("TemporaryTest123");
         await page.getByRole("button", { name: "ログイン", exact: true }).click();
         await expect(page).toHaveURL((url) => url.pathname === "/MenuSelect");
         await page.goto("/UserBirthday?userId=privacyBob");
