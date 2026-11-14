@@ -34,6 +34,25 @@ function VerifyBackup {
     & java '-Dstdout.encoding=UTF-8' '-Dstderr.encoding=UTF-8' -cp $classPath jp.nw.security.BirthdayAdmin verify
     if ($LASTEXITCODE -ne 0) { throw 'Birthday verification failed.' }
 }
+function Wait-TestLogin {
+    for ($attempt = 0; $attempt -lt 60; $attempt++) {
+        try {
+            $response = Invoke-WebRequest -Uri "$env:E2E_BASE_URL/Login" -UseBasicParsing -TimeoutSec 5 -SkipHttpErrorCheck
+            if ($response.StatusCode -eq 200) { return $true }
+            if ($response.StatusCode -eq 404) { return $false }
+        } catch {
+            # The HTTP connector may still be starting.
+        }
+        Start-Sleep -Seconds 2
+    }
+    return $false
+}
+function Write-TestTomcatLogs {
+    Compose ps -a tomcat mysql
+    Compose logs --tail 100 tomcat mysql
+    # Servlet listener exceptions are written to Tomcat's per-host log.
+    & docker compose -p $project -f $compose exec -T tomcat sh -c 'for log in /usr/local/tomcat/logs/localhost.*.log; do if [ -f "$log" ]; then tail -n 150 "$log"; fi; done'
+}
 try {
     [Console]::OutputEncoding = [Text.UTF8Encoding]::new($false)
     $OutputEncoding = [Console]::OutputEncoding
@@ -68,12 +87,15 @@ try {
     foreach ($name in @('BIRTHDAY_DATA_JDBC_URL','BIRTHDAY_VAULT_JDBC_URL','BIRTHDAY_KEYSTORE_PATH','BIRTHDAY_KEYSTORE_PASSWORD_FILE','DB_NAME')) { [Environment]::SetEnvironmentVariable($name, $values[$name], 'Process') }
     if (-not $SkipBrowser) {
         Compose up -d tomcat
-        $ready = $false
-        for ($attempt = 0; $attempt -lt 60; $attempt++) {
-            try { $response = Invoke-WebRequest -Uri "$env:E2E_BASE_URL/Login" -UseBasicParsing; if ($response.StatusCode -eq 200) { $ready = $true; break } } catch { }
-            Start-Sleep -Seconds 2
+        if (-not (Wait-TestLogin)) {
+            Write-TestTomcatLogs
+            Write-Warning 'Test Tomcat did not serve /Login. Retrying startup once.'
+            Compose up -d --force-recreate tomcat
+            if (-not (Wait-TestLogin)) {
+                Write-TestTomcatLogs
+                throw 'Test Tomcat did not serve /Login after a startup retry.'
+            }
         }
-        if (-not $ready) { Compose logs tomcat; throw 'Test Tomcat did not start.' }
         & npx playwright test tests/birthday.spec.ts --project=chromium --workers=1 --reporter=line
         if ($LASTEXITCODE -ne 0) { throw 'Birthday browser tests failed.' }
     }

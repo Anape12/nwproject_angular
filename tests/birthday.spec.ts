@@ -8,7 +8,7 @@ test.describe("生年月日の暗号化保存", () => {
         await page.getByLabel("ユーザーID", { exact: true }).fill("privacyAlice");
         await page.getByLabel("パスワード", { exact: true }).fill("TemporaryTest123");
         await page.getByRole("button", { name: "ログイン", exact: true }).click();
-        await expect(page).toHaveURL((url) => url.pathname === "/MenuSelect");
+        await expect(page.getByRole("heading", { name: "利用するメニューを選択" })).toBeVisible({ timeout: 15_000 });
         await page.goto("/UserBirthday");
         await expect(page.getByRole("heading", { name: "生年月日の確認・変更" })).toBeVisible();
         await expect(page.locator('input[name="birthday"]')).toHaveValue("1996-04-13");
@@ -37,7 +37,7 @@ test.describe("生年月日の暗号化保存", () => {
         await page.getByLabel("ユーザーID", { exact: true }).fill("privacyAdmin");
         await page.getByLabel("パスワード", { exact: true }).fill("TemporaryTest123");
         await page.getByRole("button", { name: "ログイン", exact: true }).click();
-        await expect(page).toHaveURL((url) => url.pathname === "/MenuSelect");
+        await expect(page.getByRole("heading", { name: "利用するメニューを選択" })).toBeVisible({ timeout: 15_000 });
         await page.goto("/UserBirthday?userId=privacyBob");
         await expect(page.locator('input[name="birthday"]')).toHaveValue("1988-02-03");
         await page.locator('input[name="birthday"]').fill("1988-02-05");
