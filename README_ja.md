@@ -50,12 +50,27 @@ AI 住人と Qiita Guide を使う場合は、それぞれの追加設定が必�
 
 Angular コンポーネントとそのテンプレートは `frontend/src/<機能>`、画面起動用 HTML は `frontend/pages/<機能>` で編集します。Maven は画面起動用 HTML を WAR 内の `WEB-INF/angular/<機能>` に配置します。
 
-Tomcat は `target/app` を参照します。Angular または Java を変更したら、ビルドして Tomcat を再起動します。
+### Angular 更新時の Build
+
+初回の `.\mvnw.cmd package` が済んでいて、npm の依存関係がインストールされている状態で、リポジトリ直下から上から順に実行します。Angular のビルドが成功してから `war:exploded` を実行してください。
+
+```powershell
+npm run build:frontend
+.\mvnw.cmd war:exploded
+```
+
+`war:exploded` は Angular の JS・CSS と画面起動用 HTML を、Tomcat が参照する `target/app` に配置します。この手順では Maven による `npm ci`、Java の再コンパイルとテスト、WAR の生成を省けます。配置後は、Tomcat を起動したままブラウザーを `Ctrl+F5` で更新してください。
+
+### Java も変更した場合
+
+全体をビルドし、成功したら Tomcat を再起動します。
 
 ```powershell
 .\mvnw.cmd package
 docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml restart tomcat
 ```
+
+ファイルの削除や改名で古い成果物が残る場合は、Tomcat を停止してから `.\mvnw.cmd clean package` を実行し、成功後に Tomcat を起動します。起動時は、利用中の Compose ファイルを指定してください。
 
 画面が開かない場合は、次のコマンドで起動ログを確認します。
 

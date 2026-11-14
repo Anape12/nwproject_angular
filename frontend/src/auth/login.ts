@@ -1,15 +1,18 @@
 import { Component, OnInit, signal } from "@angular/core";
 import { projectRequest } from "../infr/project-request";
+import { initializeServerProgress } from "../shared/server-progress";
 
+import { CustomButtonComponent } from "../component/button/Custom-Button-Component";
 import { CustomTextComponent } from "../component/text/Custom-Text-Component";
 
 @Component({
-    imports: [CustomTextComponent],
+    imports: [CustomTextComponent, CustomButtonComponent],
     selector: "nw-login",
     templateUrl: "./login.html",
     host: { style: "display: contents" },
 })
 export class LoginComponent implements OnInit {
+    private readonly progress = initializeServerProgress();
     readonly loginUrl = projectRequest.url("current");
     readonly errorMessage = signal("");
     readonly failed = signal(false);
@@ -33,6 +36,7 @@ export class LoginComponent implements OnInit {
         event.preventDefault();
         if (this.submitting()) return;
         this.submitting.set(true);
+        const finishProgress = this.progress.start("ログイン中…");
         try {
             const values = new FormData(form);
             const response = await projectRequest.request("current", {
@@ -58,6 +62,7 @@ export class LoginComponent implements OnInit {
         } catch {
             this.errorMessage.set("ログイン処理に失敗しました。再度お試しください。");
         } finally {
+            finishProgress();
             this.submitting.set(false);
         }
     }

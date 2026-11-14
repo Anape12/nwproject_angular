@@ -27,10 +27,26 @@ After Flyway and Tomcat start successfully, open the [login page](http://localho
 
 Edit Angular components and their templates in `frontend/src/<feature>` and page entry HTML in `frontend/pages/<feature>`. Maven packages the entry pages under `WEB-INF/angular/<feature>` in the WAR.
 
+### Angular-only changes
+
+Run these commands from the repository root after the initial `./mvnw package` and npm dependency installation.
+
+```bash
+npm run build:frontend && ./mvnw war:exploded
+```
+
+`war:exploded` copies the built JavaScript, CSS, and entry HTML into `target/app`, which Tomcat mounts. Reload the page with `Ctrl+F5` while Tomcat is running. This skips Maven's `npm ci`, Java compilation and tests, and WAR creation.
+
+### Changes that include Java
+
+Build the application and restart Tomcat after the build succeeds.
+
 ```bash
 ./mvnw package
 docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml restart tomcat
 ```
+
+If deleting or renaming files leaves stale build output, stop Tomcat, run `./mvnw clean package`, and start it after the build succeeds. Use the Compose files for your running environment.
 
 # Apply Database Migrations (Flyway)
 

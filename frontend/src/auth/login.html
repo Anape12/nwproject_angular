@@ -22,9 +22,10 @@
     @if (errorMessage()) {
     <p class="login-error" role="alert">{{ errorMessage() }}</p>
     }
-    <form #form [action]="loginUrl" method="post" (submit)="submit($event, form)">
+    <form #form [action]="loginUrl" method="post" data-nw-progress-ignore (submit)="submit($event, form)">
         <div class="form-group">
             <label for="userId">ユーザーID</label>
+            <!-- angular久々につき備忘：[]を付与すると、右辺を式として評価・[]を付与しないと右辺を文字列として処理 -->
             <app-custom-text
                 name="userId"
                 [required]="true"
@@ -45,7 +46,13 @@
             >
             </app-custom-text>
         </div>
-        <input class="login-btn" id="loginBtn" type="submit" value="ログイン" [disabled]="submitting()" />
+        <app-custom-button
+            name="loginBtn"
+            btnValue="ログイン"
+            trgClass="login-btn"
+            buttonType="submit"
+            [disabled]="submitting()"
+        ></app-custom-button>
     </form>
 </main>
 }
