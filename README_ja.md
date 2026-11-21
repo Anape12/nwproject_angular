@@ -1,5 +1,13 @@
 # NW Project Angular
 
+## Java と Nginx のセキュリティ更新
+
+2026年11月21日時点で、ホストの JDK とコンテナの Java は 21.0.13.1+2 以降、Nginx は 1.31.9 以降を使用します。Java の修正版は [Adoptium の案内](https://adoptium.net/news/2026/11/temurin-november-2026-cspu-java4shell)、Nginx の修正対象は [公式の脆弱性一覧](https://nginx.org/en/security_advisories.html)で確認できます。
+
+Tomcat、開発コンテナ、生年月日テストのベースイメージは修正版のダイジェストに固定しています。Maven のビルド用 JDK も修正版へ置き換えています。今後のセキュリティ更新では、各イメージの実バージョンを確認してタグとダイジェストを更新してください。CI は Java 21 の最新パッチを取得します。
+
+Windows の JDK 更新後は、インストーラーの案内に従って PC を再起動し、`java -version` と `.\mvnw.cmd -version` で使用中のバージョンを確認してください。
+
 ## Windows で画面を起動する
 
 JDK 21 と Docker Desktop（Linux コンテナ）を用意し、このリポジトリの直下で PowerShell を開きます。初回ビルドには、アクセス権のある `jpa-security` のチェックアウトも必要です。[依存ライブラリの準備](docs/birthday-encryption.md)

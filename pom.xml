@@ -107,7 +107,9 @@
                     <installDirectory>${project.build.directory}/frontend-tools</installDirectory>
                 </configuration>
                 <executions>
+                    <!-- Run frontend tasks through Maven CLI, avoiding concurrent IDE npm builds. -->
                     <execution>
+                        <?m2e ignore?>
                         <id>install-node</id>
                         <phase>prepare-package</phase>
                         <goals><goal>install-node-and-npm</goal></goals>
@@ -116,12 +118,14 @@
                         </configuration>
                     </execution>
                     <execution>
+                        <?m2e ignore?>
                         <id>install-frontend-dependencies</id>
                         <phase>prepare-package</phase>
                         <goals><goal>npm</goal></goals>
                         <configuration><arguments>ci --include=dev</arguments></configuration>
                     </execution>
                     <execution>
+                        <?m2e ignore?>
                         <id>build-angular</id>
                         <phase>prepare-package</phase>
                         <goals><goal>npm</goal></goals>

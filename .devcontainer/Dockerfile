@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/java:3-21-trixie
+FROM mcr.microsoft.com/devcontainers/java:3-21-trixie@sha256:3e2d83a877f352ba1a70f2af49d81c903a48ee0cd0aeacc94e13acac6009bf94
 
 ARG INSTALL_MAVEN="true"
 ARG MAVEN_VERSION=""

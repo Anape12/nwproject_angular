@@ -1,12 +1,14 @@
 # --- build stage ---
+FROM eclipse-temurin:21.0.13.1_2-jdk@sha256:cc9c4fb30bc63de16c227ac3c69f237a10537449ed7ab29fae21c6441470f69c AS patched-java
 FROM maven:3.9-eclipse-temurin-21 AS build
 
+COPY --from=patched-java /opt/java/openjdk /opt/java/openjdk
 WORKDIR /app
 COPY . .
 RUN mvn clean package
 
 # --- runtime stage ---
-FROM tomcat:9.0
+FROM tomcat:9.0-jdk21-temurin@sha256:c341c4e0d21a718f8193611e30ac015540e3c148baa2bf9dc4ae5d7324072933
 
 COPY server.xml /usr/local/tomcat/conf/server.xml
 

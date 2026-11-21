@@ -29,6 +29,7 @@ jobs:
               with:
                   distribution: temurin
                   java-version: "21"
+                  check-latest: true
             - uses: actions/setup-node@v4
               with:
                   node-version: "22"
