@@ -14,7 +14,8 @@ jobs:
   build:
     # Fork PRs must not receive or execute code with access to private dependencies.
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
+    # Playwright 1.60 supports Ubuntu 24.04.
+    runs-on: ubuntu-24.04
     env:
       COMPOSE_FILE: .devcontainer/docker-compose.yml
       COMPOSE_PROJECT_NAME: nwproject-angular-ci
