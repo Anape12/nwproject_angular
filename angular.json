@@ -16,6 +16,14 @@
                         "index": false,
                         "styles": ["frontend/src/shared/server-progress.css"],
                         "outputHashing": "none"
+                    },
+                    "configurations": {
+                        "development": {
+                            "optimization": false,
+                            "sourceMap": true,
+                            "namedChunks": true,
+                            "extractLicenses": false
+                        }
                     }
                 }
             }

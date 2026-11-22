@@ -4,6 +4,7 @@ import { initializeServerProgress } from "../shared/server-progress";
 
 import { CustomButtonComponent } from "../component/button/Custom-Button-Component";
 import { CustomTextComponent } from "../component/text/Custom-Text-Component";
+import { CustomTextType } from "../component/text/Custom-Text-Type";
 
 @Component({
     imports: [CustomTextComponent, CustomButtonComponent],
@@ -12,6 +13,7 @@ import { CustomTextComponent } from "../component/text/Custom-Text-Component";
     host: { style: "display: contents" },
 })
 export class LoginComponent implements OnInit {
+    readonly CustomTextType = CustomTextType;
     private readonly progress = initializeServerProgress();
     readonly loginUrl = projectRequest.url("current");
     readonly errorMessage = signal("");

@@ -2,7 +2,7 @@
 
 ## Java と Nginx のセキュリティ更新
 
-2026年11月21日時点で、ホストの JDK とコンテナの Java は 21.0.13.1+2 以降、Nginx は 1.31.9 以降を使用します。Java の修正版は [Adoptium の案内](https://adoptium.net/news/2026/11/temurin-november-2026-cspu-java4shell)、Nginx の修正対象は [公式の脆弱性一覧](https://nginx.org/en/security_advisories.html)で確認できます。
+2026 年 11 月 21 日時点で、ホストの JDK とコンテナの Java は 21.0.13.1+2 以降、Nginx は 1.31.9 以降を使用します。Java の修正版は [Adoptium の案内](https://adoptium.net/news/2026/11/temurin-november-2026-cspu-java4shell)、Nginx の修正対象は [公式の脆弱性一覧](https://nginx.org/en/security_advisories.html)で確認できます。
 
 Tomcat、開発コンテナ、生年月日テストのベースイメージは修正版のダイジェストに固定しています。Maven のビルド用 JDK も修正版へ置き換えています。今後のセキュリティ更新では、各イメージの実バージョンを確認してタグとダイジェストを更新してください。CI は Java 21 の最新パッチを取得します。
 
@@ -68,6 +68,21 @@ npm run build:frontend
 ```
 
 `war:exploded` は Angular の JS・CSS と画面起動用 HTML を、Tomcat が参照する `target/app` に配置します。この手順では Maven による `npm ci`、Java の再コンパイルとテスト、WAR の生成を省けます。配置後は、Tomcat を起動したままブラウザーを `Ctrl+F5` で更新してください。
+
+### Chrome で Angular をデバッグする
+
+TypeScript のソースマップを含む開発用ビルドを作り、Tomcat の配信先へ配置します。最初のコマンドが成功してから次を実行してください。
+
+```powershell
+npm run build:frontend -- --configuration development
+.\mvnw.cmd war:exploded
+
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.birthday.yml up -d db birthday-vault tomcat
+```
+
+Chrome の DevTools を開き、設定の Sources にある **Enable JavaScript source maps** を有効にします。画面を `Ctrl+F5` で更新したら、Sources の `Ctrl+P` で `Custom-Text-Component.ts` などのファイルを検索し、処理の行にブレークポイントを置きます。画面からフォーカスを外すなどの操作で、その処理をデバッグできます。
+
+通常の配布用ビルドへ戻すときは `npm run build:frontend` と `.\mvnw.cmd war:exploded` を順に実行します。
 
 ### Java も変更した場合
 

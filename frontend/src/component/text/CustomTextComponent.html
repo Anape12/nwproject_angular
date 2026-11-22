@@ -1,13 +1,23 @@
-<input
-    #textInput
-    [id]="inputId || name"
-    [name]="name"
-    [type]="textType"
-    [value]="content"
-    [required]="required"
-    [attr.maxlength]="maxLength"
-    [attr.autocomplete]="autocomplete"
-    [class]="variant"
-    (focus)="onFocus($event)"
-    (blur)="onBlur($event, textInput.value)"
-/>
+<div class="text-field">
+    <input
+        #textInput
+        [id]="inputId || name"
+        [name]="name"
+        [type]="textType"
+        [value]="content"
+        [required]="required"
+        [attr.maxlength]="maxLength"
+        [attr.autocomplete]="autocomplete"
+        [class]="variant"
+        [attr.aria-invalid]="errorMessage() ? 'true' : null"
+        [attr.aria-describedby]="errorMessage() ? (inputId || name) + '-error' : null"
+        (focus)="onFocus()"
+        (blur)="onBlur(textInput.value)"
+    />
+    @if (errorMessage(); as message) {
+        <app-custom-popup
+            [popupId]="(inputId || name) + '-error'"
+            [message]="message"
+        ></app-custom-popup>
+    }
+</div>

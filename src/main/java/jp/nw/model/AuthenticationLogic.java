@@ -20,6 +20,9 @@ import jp.nw.parts.PasswordUtil;
 import jp.nw.parts.Query;
 import jp.nw.parts.SqlType;
 
+/**
+ * 認証ロジック
+ */
 public class AuthenticationLogic {
     private static final int MAX_FAILURES = positiveEnv("LOGIN_MAX_FAILURES", 5);
     private static final int LOCK_MINUTES = positiveEnv("LOGIN_LOCK_MINUTES", 15);
@@ -31,7 +34,10 @@ public class AuthenticationLogic {
         try (Connection con = db.getConnection()) {
             con.setAutoCommit(false);
             try {
+                // ユーザー情報を更新用に取得する
                 UserRecord record = findForUpdate(db, userId);
+
+                // 認証情報の検証
                 Decision decision = evaluate(record, rawPassword, LocalDateTime.now(), MAX_FAILURES, LOCK_MINUTES);
                 String ip = AuditLogLogic.clientIp(request);
                 String agent = request == null ? null : request.getHeader("User-Agent");
@@ -50,6 +56,13 @@ public class AuthenticationLogic {
         }
     }
 
+    /**
+     * 指定されたユーザーIDのレコードを更新用に検索する。
+     *
+     * @param db     DBBase
+     * @param userId ユーザーID
+     * @return UserRecord
+     */
     private UserRecord findForUpdate(DBBase db, String userId) {
         return db.selectOne(userForUpdateQuery(userId), AuthenticationLogic::mapUserRecord).orElse(null);
     }
@@ -84,10 +97,20 @@ public class AuthenticationLogic {
                 .tableName("users_info")
                 .selectColumns(selectColumns)
                 .conditions(conditions)
-                .forUpdate(true)
+                .forUpdate(true) // 対象アカウントを排他ロックする
                 .build();
     }
 
+    /**
+     * 認証評価
+     *
+     * @param record      ユーザー記録
+     * @param rawPassword 生パスワード
+     * @param now         現在時刻
+     * @param maxFailures 最大失敗回数
+     * @param lockMinutes ロック時間（分）
+     * @return 評価結果
+     */
     static Decision evaluate(UserRecord record, String rawPassword, LocalDateTime now,
             int maxFailures, int lockMinutes) {
         if (record == null)
@@ -109,6 +132,7 @@ public class AuthenticationLogic {
                     failures, lockUntil);
         }
 
+        // パスワードの有効期限を検証
         if (passwordExpired(record.passwordExpiration, now.toLocalDate()))
             return new Decision(Outcome.EXPIRED, 0, null);
 
@@ -152,6 +176,13 @@ public class AuthenticationLogic {
                 .values(values).conditions(conditions).build();
     }
 
+    /**
+     * パスワード有効期限の判定
+     * 
+     * @param expiration
+     * @param today
+     * @return
+     */
     private static boolean passwordExpired(String expiration, LocalDate today) {
         try {
             return expiration != null && !"99999999".equals(expiration)

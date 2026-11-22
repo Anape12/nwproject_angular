@@ -79,6 +79,8 @@ public class LoginController extends HttpServlet {
 		response.setHeader("Cache-Control", "no-store");
 
 		String userId = request.getParameter("userId");
+
+		// ログイン本処理
 		AuthenticationLogic.Result result = new AuthenticationLogic().authenticate(
 				userId == null ? "" : userId.trim(), request.getParameter("password"), request);
 

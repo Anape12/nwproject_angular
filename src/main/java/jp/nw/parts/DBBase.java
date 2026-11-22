@@ -1,7 +1,5 @@
 package jp.nw.parts;
 
-import jp.nw.model.CodedException;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -11,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import jp.nw.model.CodedException;
 
 public class DBBase {
 
@@ -40,8 +40,8 @@ public class DBBase {
 					PASSWORD);
 
 			try (Statement st = con.createStatement()) {
-            	st.execute("SET time_zone = '+09:00'");
-        	}
+				st.execute("SET time_zone = '+09:00'");
+			}
 
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -70,6 +70,7 @@ public class DBBase {
 
 	public <T> Optional<T> selectOne(Query query, RowMapper<T> mapper) {
 		requireSelect(query);
+		// SqlBuilderでSQLを構築
 		try (PreparedStatement ps = con.prepareStatement(new SqlBuilder().build(query))) {
 			bindParameter(ps, query);
 			try (ResultSet rs = ps.executeQuery()) {
