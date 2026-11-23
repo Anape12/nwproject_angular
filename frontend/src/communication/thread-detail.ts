@@ -1,4 +1,5 @@
 import { Component, DestroyRef, ElementRef, inject } from "@angular/core";
+import { ConfirmUpdateDirective } from "../component/dialog/confirm-update.directive";
 import { projectRequest } from "../infr/project-request";
 
 interface ThreadView {
@@ -15,6 +16,7 @@ interface ThreadView {
 }
 
 @Component({
+    imports: [ConfirmUpdateDirective],
     selector: "nw-thread-detail",
     templateUrl: "./thread-detail.html",
     host: { style: "display: contents" },
@@ -34,10 +36,5 @@ export class ThreadDetailComponent {
             const reload = window.setTimeout(() => location.reload(), 3000);
             destroyRef.onDestroy(() => window.clearTimeout(reload));
         }
-    }
-
-    confirmStatusChange(event: Event): void {
-        const message = this.thread.closed ? "このスレッドを再開しますか？" : "このスレッドを完了にしますか？";
-        if (!window.confirm(message)) event.preventDefault();
     }
 }

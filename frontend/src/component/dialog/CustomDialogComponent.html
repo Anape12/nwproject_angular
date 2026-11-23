@@ -1,0 +1,8 @@
+<dialog #dialog [attr.aria-label]="title" (cancel)="cancel($event)">
+    <h2>{{ title }}</h2>
+    <p>{{ message }}</p>
+    <div class="dialog-actions">
+        <button type="button" autofocus (click)="cancel()">キャンセル</button>
+        <button type="button" class="confirm-button" (click)="confirm()">実行する</button>
+    </div>
+</dialog>

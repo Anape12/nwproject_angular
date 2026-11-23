@@ -1,7 +1,9 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
+import { ConfirmUpdateDirective } from "../component/dialog/confirm-update.directive";
 import { projectRequest } from "../infr/project-request";
 
 @Component({
+    imports: [ConfirmUpdateDirective],
     selector: "nw-user-registration",
     templateUrl: "./user-registration.html",
     host: { style: "display: contents" },
@@ -30,7 +32,7 @@ export class UserRegistrationComponent {
                 location.assign(response.url);
                 return;
             }
-            if (response.status === 400) {
+            if (response.status === 400 || response.status === 503) {
                 const { message } = await response.json();
                 this.error.set(message);
                 return;

@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { ConfirmUpdateDirective } from "../component/dialog/confirm-update.directive";
 import { projectRequest } from "../infr/project-request";
 
 interface ReportRow {
@@ -20,6 +21,7 @@ interface ReportDetail {
 }
 
 @Component({
+    imports: [ConfirmUpdateDirective],
     selector: "nw-report-write",
     templateUrl: "./report-write.html",
     host: { style: "display: contents" },
@@ -36,8 +38,4 @@ export class ReportWriteComponent {
     readonly reports: ReportRow[] = JSON.parse(this.data["reports"] || "[]");
     readonly selected: ReportDetail | null = JSON.parse(this.data["selected"] || "null");
     readonly attachments: { id: string; name: string }[] = JSON.parse(this.data["attachments"] || "[]");
-
-    confirmDelete(event: Event): void {
-        if (!window.confirm("この下書きを削除しますか？")) event.preventDefault();
-    }
 }

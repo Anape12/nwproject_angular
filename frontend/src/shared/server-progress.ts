@@ -178,7 +178,7 @@ export function initializeServerProgress() {
             const action = submitter?.getAttribute("formaction") || form.getAttribute("action") || location.href;
             const target = submitter?.getAttribute("formtarget") || form.target;
             const method = submitter?.getAttribute("formmethod") || form.method || "get";
-            if (form.dataset.nwProgressIgnore !== undefined || !navigable(action))
+            if (form.dataset.nwProgressIgnore !== undefined || form.dataset["nwConfirmationRequired"] === "true" || !navigable(action))
                 return;
             const separateTab = newTab(target);
             if (!separateTab && !ownTab(target)) return;

@@ -1,4 +1,5 @@
 import { Component, computed, ElementRef, inject, signal } from "@angular/core";
+import { ConfirmUpdateDirective } from "../component/dialog/confirm-update.directive";
 import { projectRequest } from "../infr/project-request";
 
 interface AttendanceRow {
@@ -29,6 +30,7 @@ interface DayRow {
 }
 
 @Component({
+    imports: [ConfirmUpdateDirective],
     selector: "nw-attendance",
     templateUrl: "./attendance.html",
     host: { style: "display: contents" },
@@ -71,10 +73,6 @@ export class AttendanceComponent {
     changeDate(date: string): void {
         this.workDate.set(date);
         if (!this.matchingReports().some(report => report.id === this.reportId())) this.reportId.set("");
-    }
-
-    confirm(event: Event, message: string): void {
-        if (!window.confirm(message)) event.preventDefault();
     }
 
     private monthUrl(year = "", month = ""): string {

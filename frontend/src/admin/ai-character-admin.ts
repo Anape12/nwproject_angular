@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { ConfirmUpdateDirective } from "../component/dialog/confirm-update.directive";
 import { projectRequest } from "../infr/project-request";
 
 interface CharacterRow {
@@ -22,6 +23,7 @@ interface JobRow {
 }
 
 @Component({
+    imports: [ConfirmUpdateDirective],
     selector: "nw-ai-character-admin",
     templateUrl: "./ai-character-admin.html",
     host: { style: "display: contents" },

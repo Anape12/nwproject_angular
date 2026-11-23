@@ -1,7 +1,9 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
+import { ConfirmUpdateDirective } from "../component/dialog/confirm-update.directive";
 import { projectRequest } from "../infr/project-request";
 
 @Component({
+    imports: [ConfirmUpdateDirective],
     selector: "nw-change-password",
     templateUrl: "./change-password.html",
     host: { style: "display: contents" },

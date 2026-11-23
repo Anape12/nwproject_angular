@@ -52,6 +52,12 @@ Java をデバッグするときは、Tomcat の起動後に VS Code の「実�
 
 ログインやメニューの表示は、上記の Tomcat と MySQL で確認できます。新規ユーザー登録と生年月日の確認・変更には、暗号化用の鍵と対応表 DB が必要です。準備したら、起動時に `-f .devcontainer/docker-compose.birthday.yml` を追加してください。[生年月日の暗号化設定](docs/birthday-encryption.md)
 
+暗号化設定済みの環境では、Tomcat を再作成する際も必ず追加定義を指定します。基本定義だけで `up -d --build tomcat` を実行すると暗号化設定が外れ、新規ユーザー登録が HTTP 503 で失敗します。既存の鍵を作り直さず、次のコマンドで設定を復元してください。
+
+```powershell
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.birthday.yml up -d db birthday-vault tomcat
+```
+
 AI 住人と Qiita Guide を使う場合は、それぞれの追加設定が必要です。
 
 ## 変更を反映する

@@ -15,7 +15,7 @@
                 <h1>{{ thread.title }}</h1>
             </div>
             @if (thread.canManage) {
-                <form method="post" [action]="project.url('threadStatus')" (submit)="confirmStatusChange($event)">
+                <form method="post" [action]="project.url('threadStatus')" [confirmUpdate]="thread.closed ? 'このスレッドを再開しますか？' : 'このスレッドを完了にしますか？'">
                     <input type="hidden" name="csrfToken" [value]="csrfToken" />
                     <input type="hidden" name="threadId" [value]="thread.id" />
                     <input type="hidden" name="action" [value]="thread.closed ? 'reopen' : 'close'" />

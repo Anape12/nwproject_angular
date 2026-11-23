@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject, OnInit, signal } from "@angular/core";
+import { ConfirmUpdateDirective } from "../component/dialog/confirm-update.directive";
 import { projectRequest } from "../infr/project-request";
 
 interface PortalData {
@@ -16,6 +17,7 @@ interface PortalData {
 }
 
 @Component({
+    imports: [ConfirmUpdateDirective],
     selector: "nw-portal",
     templateUrl: "./portal.html",
     host: { style: "display: contents" },
@@ -38,12 +40,6 @@ export class PortalComponent implements OnInit {
             this.data.set(data);
         } catch {
             this.loadFailed.set(true);
-        }
-    }
-
-    confirmWithdrawal(event: Event): void {
-        if (!window.confirm("この申請を取り下げますか？")) {
-            event.preventDefault();
         }
     }
 }

@@ -6,7 +6,7 @@
             <a class="nav-button" [href]="nextUrl" aria-label="翌月">›</a>
             <h1>{{ data.year }}年 {{ data.month }}月</h1>
             <a class="today-button" [href]="project.url('calendarExchange')">iCalendar出力</a>
-            <form method="post" enctype="multipart/form-data" [action]="project.url('calendarExchange')">
+            <form method="post" enctype="multipart/form-data" [action]="project.url('calendarExchange')" confirmUpdate="カレンダーの予定を取り込みますか？">
                 <input type="file" name="calendarFile" accept=".ics,text/calendar" required />
                 <button class="today-button" type="submit">取込</button>
             </form>
@@ -38,13 +38,13 @@
     <aside class="event-panel">
         <h2>{{ event ? "予定を編集" : "予定を追加" }}</h2>
         @if (event && data.eventParticipant === "true") {
-            <form method="post" [action]="project.url('scheduleResponse')">
+            <form method="post" [action]="project.url('scheduleResponse')" confirmUpdate="参加・辞退の回答を登録しますか？">
                 <input type="hidden" name="eventId" [value]="event.id" />
                 <button type="submit" name="status" value="ACCEPTED">参加する</button>
                 <button type="submit" name="status" value="DECLINED">辞退する</button>
             </form>
         }
-        <form method="post" [action]="action" id="event-form">
+        <form method="post" [action]="action" id="event-form" confirmUpdate="予定を登録・更新しますか？">
             <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
             <input type="hidden" name="year" [value]="data.year ?? ''" />
             <input type="hidden" name="month" [value]="data.month ?? ''" />
@@ -123,7 +123,7 @@
                     </form>
                 }
             </div>
-            <form method="post" [action]="action" (submit)="confirmDelete($event)">
+            <form method="post" [action]="action" confirmUpdate="この予定を削除しますか？">
                 <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
                 <input type="hidden" name="year" [value]="data.year ?? ''" />
                 <input type="hidden" name="month" [value]="data.month ?? ''" />

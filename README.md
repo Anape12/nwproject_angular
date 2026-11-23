@@ -23,6 +23,12 @@ docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-comp
 
 After Flyway and Tomcat start successfully, open the [login page](http://localhost:8081/Login).
 
+User registration requires the birthday encryption setup described in [the encryption guide](docs/birthday-encryption.md). After that setup, always include `-f .devcontainer/docker-compose.birthday.yml` when creating or rebuilding Tomcat. Recreating it with only the base Compose file removes the encryption settings and makes registration return HTTP 503. Restore an already configured environment with:
+
+```bash
+docker compose -p nwproject-angular --env-file .env -f .devcontainer/docker-compose.yml -f .devcontainer/docker-compose.birthday.yml up -d db birthday-vault tomcat
+```
+
 ## Apply changes
 
 Edit Angular components and their templates in `frontend/src/<feature>` and page entry HTML in `frontend/pages/<feature>`. Maven packages the entry pages under `WEB-INF/angular/<feature>` in the WAR.

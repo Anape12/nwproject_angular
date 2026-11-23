@@ -25,7 +25,7 @@
         </section>
         <section class="ai-form">
             <h2>{{ selected ? "AI住人を編集" : "AI住人を追加" }}</h2>
-            <form method="post" [action]="action">
+            <form confirmUpdate="AI住人の設定を保存しますか？" method="post" [action]="action">
                 <input type="hidden" name="csrfToken" [value]="csrfToken" />
                 @if (selected) {
                     <input type="hidden" name="characterId" [value]="selected.id" />

@@ -94,7 +94,14 @@ public class UserInsert extends HttpServlet {
                     "権限=" + user.getPermission());
             session.setAttribute("userInsertSuccess", user.getUserId() + " を登録しました。");
         } catch (CodedException.Failure e) {
-            response.sendError(503, jp.nw.model.ErrorMessageLogic.forDisplay(e));
+            getServletContext().log("User registration failed: " + e.errorCode().code(), e);
+            String message = jp.nw.model.ErrorMessageLogic.forDisplay(e);
+            if ("json".equals(request.getParameter("format"))) {
+                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                PageJson.write(response, Map.of("message", message));
+            } else {
+                response.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE, message);
+            }
             return;
         } catch (IllegalArgumentException | DateTimeParseException e) {
             AuditLogLogic.record(request, "USER", "USER_CREATE_FAILED", "USER",

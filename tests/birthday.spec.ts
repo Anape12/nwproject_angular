@@ -17,6 +17,7 @@ test.describe("生年月日の暗号化保存", () => {
             new URL(response.url()).pathname === "/UserBirthday" && response.request().method() === "POST",
         );
         await page.getByRole("button", { name: "保存する" }).click();
+        await page.getByRole("dialog", { name: "更新の確認" }).getByRole("button", { name: "実行する" }).click();
         expect((await saved).status()).toBe(302);
         await page.goto("/UserBirthday");
         await expect(page.locator('input[name="birthday"]')).toHaveValue("1996-04-14");
@@ -45,6 +46,7 @@ test.describe("生年月日の暗号化保存", () => {
             new URL(response.url()).pathname === "/UserBirthday" && response.request().method() === "POST",
         );
         await page.getByRole("button", { name: "保存する" }).click();
+        await page.getByRole("dialog", { name: "更新の確認" }).getByRole("button", { name: "実行する" }).click();
         expect((await saved).status()).toBe(302);
         await page.goto("/UserBirthday?userId=privacyBob");
         await expect(page.locator('input[name="birthday"]')).toHaveValue("1988-02-05");

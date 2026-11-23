@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject, signal } from "@angular/core";
+import { ConfirmUpdateDirective } from "../component/dialog/confirm-update.directive";
 import { projectRequest } from "../infr/project-request";
 
 interface CalendarDay {
@@ -25,6 +26,7 @@ interface EditEvent {
 }
 
 @Component({
+    imports: [ConfirmUpdateDirective],
     selector: "nw-schedule-calendar",
     templateUrl: "./schedule-calendar.html",
     host: { style: "display: contents" },
@@ -53,9 +55,5 @@ export class ScheduleCalendarComponent {
 
     private monthUrl(year = "", month = ""): string {
         return this.action + "?" + new URLSearchParams({ year, month });
-    }
-
-    confirmDelete(event: Event): void {
-        if (!window.confirm("この予定を削除しますか？")) event.preventDefault();
     }
 }

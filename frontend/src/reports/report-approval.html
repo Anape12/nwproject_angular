@@ -11,7 +11,7 @@
     }
     @if (canConfigure) {
         <div class="batch-approval">
-            <form method="post" [action]="reviewAction">
+            <form confirmUpdate="" method="post" [action]="reviewAction">
                 <input type="hidden" name="csrfToken" [value]="csrfToken" />
                 <input type="hidden" name="action" value="route" />
                 <label class="batch-field">
@@ -27,7 +27,7 @@
                 </label>
                 <button class="submit" type="submit">承認段階を設定</button>
             </form>
-            <form method="post" [action]="reviewAction">
+            <form confirmUpdate="" method="post" [action]="reviewAction">
                 <input type="hidden" name="csrfToken" [value]="csrfToken" />
                 <input type="hidden" name="action" value="delegate" />
                 <label class="batch-field">
@@ -40,7 +40,7 @@
             </form>
         </div>
     }
-    <form class="batch-approval" method="post" [action]="reviewAction">
+    <form confirmUpdate="" class="batch-approval" method="post" [action]="reviewAction">
         <input type="hidden" name="csrfToken" [value]="csrfToken" />
         <strong class="batch-heading">承認待ちを一括処理</strong>
         <div>
@@ -88,7 +88,7 @@
                         }
                     </div>
                     @if (detail.application.status === "SUBMITTED") {
-                        <form class="approval-form" method="post" [action]="reviewAction">
+                        <form confirmUpdate="" class="approval-form" method="post" [action]="reviewAction">
                             <input type="hidden" name="csrfToken" [value]="csrfToken" />
                             <input type="hidden" name="approvalId" [value]="detail.application.id" />
                             <label>承認者コメント<textarea name="comment" maxlength="1000" rows="5"></textarea></label>

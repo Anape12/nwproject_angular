@@ -11,7 +11,7 @@
                 <strong>{{ data.year }}年 {{ data.month }}月</strong>
                 <a [href]="nextUrl" aria-label="翌月">›</a>
             </div>
-            <form method="post" [action]="action" (submit)="confirm($event, data.month + '月の未申請勤怠をすべて申請しますか？')">
+            <form method="post" [action]="action" [confirmUpdate]="data.month + '月の未申請勤怠をすべて申請しますか？'">
                 <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
                 <input type="hidden" name="year" [value]="data.year ?? ''" />
                 <input type="hidden" name="month" [value]="data.month ?? ''" />
@@ -37,7 +37,7 @@
         @if (closed) { <span class="approval-status APPROVED">月次締め済み</span> }
     </div>
     @if (data.canClose === "true") {
-        <form method="post" [action]="attendanceAction">
+        <form method="post" [action]="attendanceAction" confirmUpdate="月次締めの状態を変更しますか？">
             <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
             <input type="hidden" name="month" [value]="data.monthKey ?? ''" />
             <button class="edit-link" type="submit" name="action" [value]="closed ? 'reopen' : 'close'">
@@ -76,7 +76,7 @@
                                     <div class="row-actions">
                                         <a class="edit-link" [href]="currentUrl + '&edit=' + item.id">{{ item.editable ? "編集" : "詳細" }}</a>
                                         @if (item.editable) {
-                                            <form method="post" [action]="action" (submit)="confirm($event, 'この勤怠を管理者へ申請しますか？')">
+                                            <form method="post" [action]="action" confirmUpdate="この勤怠を管理者へ申請しますか？">
                                                 <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
                                                 <input type="hidden" name="year" [value]="data.year ?? ''" />
                                                 <input type="hidden" name="month" [value]="data.month ?? ''" />
@@ -100,7 +100,7 @@
         </section>
         <aside class="attendance-form-card">
             <h2>{{ selected ? "勤怠を編集" : "勤怠を入力" }}</h2>
-            <form method="post" [action]="action" id="attendance-form">
+            <form method="post" [action]="action" id="attendance-form" confirmUpdate="勤怠情報を保存しますか？">
                 <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
                 <input type="hidden" name="year" [value]="data.year ?? ''" />
                 <input type="hidden" name="month" [value]="data.month ?? ''" />
@@ -156,7 +156,7 @@
                 </fieldset>
             </form>
             @if (selected && selected.editable) {
-                <form method="post" [action]="action" (submit)="confirm($event, 'この勤怠情報を削除しますか？')">
+                <form method="post" [action]="action" confirmUpdate="この勤怠情報を削除しますか？">
                     <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
                     <input type="hidden" name="year" [value]="data.year ?? ''" />
                     <input type="hidden" name="month" [value]="data.month ?? ''" />

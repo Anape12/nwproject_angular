@@ -92,7 +92,7 @@
                     <div class="notice-row">
                         <span>{{ approval.application_type }} ・ {{ approval.status }} ・ {{ approval.submitted_at }}</span>
                         @if (approval.status === "SUBMITTED") {
-                            <form [action]="portalUrl" method="post" (submit)="confirmWithdrawal($event)">
+                            <form [action]="portalUrl" method="post" confirmUpdate="この申請を取り下げますか？">
                                 <input type="hidden" name="approvalId" [value]="approval.approval_id" />
                                 <button type="submit">取下げ</button>
                             </form>

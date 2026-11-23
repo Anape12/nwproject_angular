@@ -13,7 +13,7 @@
     @if (error()) {
         <div class="notice error" role="alert"><span>!</span>{{ error() }}</div>
     }
-    <form #form class="registration-card" method="post" [action]="action" (submit)="register($event, form)">
+    <form confirmUpdate="入力内容でユーザーを登録しますか？" #form class="registration-card" method="post" [action]="action" (submit)="register($event, form)">
         <input type="hidden" name="csrfToken" [value]="data.csrfToken ?? ''" />
         <section>
             <div class="section-heading">

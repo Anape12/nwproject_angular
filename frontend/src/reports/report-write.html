@@ -44,7 +44,7 @@
                 </div>
             }
             @if (!selected || selected.editable) {
-                <form method="post" [action]="action">
+                <form method="post" [action]="action" confirmUpdate="">
                     <input type="hidden" name="csrfToken" [value]="csrfToken" />
                     <input type="hidden" name="action" [value]="selected ? 'update' : 'create'" />
                     @if (selected) {
@@ -67,13 +67,13 @@
                 </form>
                 @if (selected) {
                     <div class="inline-actions">
-                        <form method="post" [action]="action">
+                        <form method="post" [action]="action" confirmUpdate="">
                             <input type="hidden" name="csrfToken" [value]="csrfToken" />
                             <input type="hidden" name="action" value="submit" />
                             <input type="hidden" name="reportId" [value]="selected.report.id" />
                             <button class="submit" type="submit">承認者へ提出</button>
                         </form>
-                        <form method="post" [action]="action" (submit)="confirmDelete($event)">
+                        <form method="post" [action]="action" confirmUpdate="この下書きを削除しますか？">
                             <input type="hidden" name="csrfToken" [value]="csrfToken" />
                             <input type="hidden" name="action" value="delete" />
                             <input type="hidden" name="reportId" [value]="selected.report.id" />

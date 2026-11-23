@@ -1,4 +1,5 @@
 import { Component, ElementRef, inject } from "@angular/core";
+import { ConfirmUpdateDirective } from "../component/dialog/confirm-update.directive";
 import { projectRequest } from "../infr/project-request";
 
 interface ApplicationRow {
@@ -21,6 +22,7 @@ interface ApplicationDetail {
 }
 
 @Component({
+    imports: [ConfirmUpdateDirective],
     selector: "nw-report-approval",
     templateUrl: "./report-approval.html",
     host: { style: "display: contents" },
